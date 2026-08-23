@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#f4efe2" />
+  <title>Ride My Line</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div id="app">
+    <canvas id="game" style="touch-action:none"></canvas>
+
+    <div id="hud" class="hud">
+      <header class="topbar">
+        <div class="brand">
+          <h1>Ride My Line</h1>
+          <p class="hint" id="hint">Draw one track · tap GO</p>
+        </div>
+        <div class="meta">
+          <span id="attemptChip" class="chip">try 1</span>
+        </div>
+      </header>
+
+      <div class="ink-wrap">
+        <span class="ink-label">INK</span>
+        <div class="ink-track" aria-hidden="true">
+          <div id="inkFill" class="ink-fill"></div>
+        </div>
+        <span id="inkPct" class="ink-pct">100%</span>
+      </div>
+
+      <footer class="dock">
+        <button type="button" id="btnReset" class="btn btn-ghost">RESET</button>
+        <button type="button" id="btnGo" class="btn btn-go" aria-label="Go">GO</button>
+      </footer>
+
+      <p class="studio">Knock on Wood Studios</p>
+    </div>
+
+    <div id="result" class="result hidden" role="dialog" aria-labelledby="resultTitle">
+      <div class="result-card">
+        <p id="resultKicker" class="result-kicker">yard-01</p>
+        <h2 id="resultTitle">MADE IT</h2>
+        <div id="resultStars" class="result-stars"></div>
+        <ul class="result-stats">
+          <li><span>Time</span><strong id="statTime">0.00s</strong></li>
+          <li><span>Ink used</span><strong id="statInk">0%</strong></li>
+          <li><span>Score</span><strong id="statScore">0</strong></li>
+        </ul>
+        <button type="button" id="btnAgain" class="btn btn-go btn-again">PLAY AGAIN</button>
+        <button type="button" id="btnResetLine" class="btn btn-ghost">RESET LINE</button>
+      </div>
+    </div>
+
+    <div id="bootError" class="boot-error hidden">
+      <div class="result-card">
+        <h2>Could not load physics</h2>
+        <p>Matter.js failed to load from the CDN. Check the network and refresh.</p>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/matter-js@0.19.0/build/matter.min.js"></script>
+  <script src="game.js"></script>
+</body>
+</html>
