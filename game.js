@@ -528,19 +528,18 @@
 
     var chassis = Matter.Bodies.rectangle(x, cy, 54, 18, {
       chamfer: { radius: 4 },
-      density: 0.0028,
-      friction: 0.28,
-      frictionAir: 0.035,
+      density: 0.0026,
+      friction: 0.3,
       restitution: 0.02,
       collisionFilter: cartFilter(group),
       label: "chassis"
     });
-    Matter.Body.setInertia(chassis, chassis.inertia * 2.3);
+    Matter.Body.setInertia(chassis, chassis.inertia * 1.85);
 
     var wopt = {
-      density: 0.0018,
-      friction: 0.82,
-      frictionStatic: 0.9,
+      density: 0.0017,
+      friction: 0.92,
+      frictionStatic: 0.98,
       restitution: 0.03,
       collisionFilter: cartFilter(group),
       label: "wheel"
@@ -596,7 +595,7 @@
     if (Math.abs(a) < 1.35) {
       Matter.Body.setAngularVelocity(
         cart.chassis,
-        cart.chassis.angularVelocity - a * 0.016
+        cart.chassis.angularVelocity - a * 0.012
       );
     }
   }
