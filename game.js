@@ -7,8 +7,9 @@
   var DESIGN_H = 1280;
   var TRACK_THICK = 17;
   var KILL_Y = 1210;
-  var FLIP_FAIL_MS = 800;
-  var STALL_MS = 2800;
+  var FLIP_FAIL_MS = 900;
+  var STALL_MS = 1600;
+  var STALL_GRACE_MS = 400;
   var RUN_MAX_MS = 14000;
   var STEP = 1000 / 60;
   var RESULT_DELAY_MS = 980;
@@ -446,7 +447,7 @@
     } else {
       starBody = null;
     }
-    flagBody = Matter.Bodies.rectangle(level.flag.x, level.flag.y - 40, 36, 84, {
+    flagBody = Matter.Bodies.rectangle(level.flag.x, level.flag.y - 36, 56, 100, {
       isStatic: true,
       isSensor: true,
       collisionFilter: { category: CAT_WORLD, mask: CAT_CART },
@@ -527,18 +528,20 @@
 
     var chassis = Matter.Bodies.rectangle(x, cy, 54, 18, {
       chamfer: { radius: 4 },
-      density: 0.0024,
-      friction: 0.32,
-      restitution: 0.05,
+      density: 0.0028,
+      friction: 0.28,
+      frictionAir: 0.035,
+      restitution: 0.02,
       collisionFilter: cartFilter(group),
       label: "chassis"
     });
+    Matter.Body.setInertia(chassis, chassis.inertia * 2.3);
 
     var wopt = {
-      density: 0.0016,
-      friction: 0.96,
-      frictionStatic: 1,
-      restitution: 0.05,
+      density: 0.0018,
+      friction: 0.82,
+      frictionStatic: 0.9,
+      restitution: 0.03,
       collisionFilter: cartFilter(group),
       label: "wheel"
     };
@@ -554,11 +557,11 @@
 
     var axA = Matter.Constraint.create({
       bodyA: chassis, pointA: { x: -20, y: 10 },
-      bodyB: wheelA, stiffness: 0.55, damping: 0.18, length: 7
+      bodyB: wheelA, stiffness: 0.78, damping: 0.32, length: 6
     });
     var axB = Matter.Constraint.create({
       bodyA: chassis, pointA: { x: 20, y: 10 },
-      bodyB: wheelB, stiffness: 0.55, damping: 0.18, length: 7
+      bodyB: wheelB, stiffness: 0.78, damping: 0.32, length: 6
     });
 
     var composite = Matter.Composite.create({ label: "cart" });
@@ -587,17 +590,32 @@
     spin(cart.wheelB);
   }
 
+  function settleChassis() {
+    if (!cart) return;
+    var a = wrapAngle(cart.chassis.angle);
+    if (Math.abs(a) < 1.35) {
+      Matter.Body.setAngularVelocity(
+        cart.chassis,
+        cart.chassis.angularVelocity - a * 0.016
+      );
+    }
+  }
+
 
   function pairHas(pair, a, b) {
     var la = pair.bodyA.label, lb = pair.bodyB.label;
     return (la === a && lb === b) || (la === b && lb === a);
   }
 
+  function pairTouchesFlag(pair) {
+    return pairHas(pair, "chassis", "flag") || pairHas(pair, "wheel", "flag");
+  }
+
   function onCollideActive(ev) {
     if (state !== STATE_RUN || ended) return;
     var pairs = ev.pairs;
     for (var i = 0; i < pairs.length; i++) {
-      if (pairHas(pairs[i], "chassis", "flag") && cartUpright()) { finish(true); return; }
+      if (pairTouchesFlag(pairs[i])) { finish(true); return; }
       if (!starGot && (pairHas(pairs[i], "chassis", "star") || pairHas(pairs[i], "wheel", "star"))) {
         collectStar();
       }
@@ -608,9 +626,24 @@
     return lab === "track" || lab === "platform" || lab === "ice" || lab === "wall";
   }
 
-  function cartUpright() {
-    if (!cart) return false;
-    return Math.abs(wrapAngle(cart.chassis.angle)) < 1.25;
+  function overLanding() {
+    if (!cart || !level || !level.landing) return false;
+    var p = cart.chassis.position;
+    var L = level.landing;
+    return p.x >= L.x - 28 && p.x <= L.x + L.w + 28 &&
+      p.y >= L.y - 96 && p.y <= L.y + 70;
+  }
+
+  function atFlag() {
+    if (!cart || !level || !level.flag) return false;
+    function hit(x, y) {
+      return Math.abs(x - level.flag.x) < 46 && y < level.flag.y + 28 && y > level.flag.y - 110;
+    }
+    var c = cart.chassis.position;
+    if (hit(c.x, c.y)) return true;
+    if (hit(cart.wheelA.position.x, cart.wheelA.position.y)) return true;
+    if (hit(cart.wheelB.position.x, cart.wheelB.position.y)) return true;
+    return false;
   }
 
   function onCollideStart(ev) {
@@ -618,7 +651,7 @@
     var pairs = ev.pairs;
     for (var i = 0; i < pairs.length; i++) {
       var pair = pairs[i];
-      if (pairHas(pair, "chassis", "flag") && cartUpright()) { finish(true); return; }
+      if (pairTouchesFlag(pair)) { finish(true); return; }
       if (!starGot && (pairHas(pair, "chassis", "star") || pairHas(pair, "wheel", "star"))) {
         collectStar();
       }
@@ -697,40 +730,43 @@
   function checkEnd() {
     if (state !== STATE_RUN || ended || !cart || !level) return;
     var pos = cart.chassis.position;
-    if (timeMs > RUN_MAX_MS) {
-      crashReason = "stuck";
-      finish(false);
+    if (atFlag()) {
+      finish(true);
       return;
-    }
-    var spd = cart.chassis.speed;
-    if (timeMs > 900 && spd < 0.48) {
-      stallMs += STEP;
-      if (stallMs >= STALL_MS) {
-        crashReason = "stuck";
-        finish(false);
-        return;
-      }
-    } else {
-      stallMs = 0;
     }
     if (pos.y > KILL_Y) {
       crashReason = "dirt";
       finish(false);
       return;
     }
+    if (timeMs > RUN_MAX_MS) {
+      crashReason = "stuck";
+      finish(false);
+      return;
+    }
+    var spd = cart.chassis.speed;
+    if (timeMs > STALL_GRACE_MS) {
+      if (spd < 0.7) {
+        stallMs += STEP;
+        if (stallMs >= STALL_MS) {
+          crashReason = "stuck";
+          finish(false);
+          return;
+        }
+      } else {
+        stallMs = Math.max(0, stallMs - STEP * 2);
+      }
+    }
     var ang = Math.abs(wrapAngle(cart.chassis.angle));
     if (ang > 2.05) {
       flipMs += STEP;
       didFlip = true;
-      if (flipMs >= FLIP_FAIL_MS) {
+      if (flipMs >= FLIP_FAIL_MS && !overLanding() && !atFlag()) {
         crashReason = "turtle";
         finish(false);
       }
     } else {
       flipMs = 0;
-    }
-    if (cartUpright() && Math.abs(pos.x - level.flag.x) < 28 && pos.y < level.flag.y + 10 && pos.y > level.flag.y - 90) {
-      finish(true);
     }
     if (level.star && !starGot && Math.hypot(pos.x - level.star.x, pos.y - level.star.y) < 34) {
       collectStar();
@@ -1648,6 +1684,7 @@
           driveLeft -= STEP;
         }
         Matter.Engine.update(engine, STEP);
+        settleChassis();
         acc -= STEP;
       }
       timeMs = ts - runStart;
