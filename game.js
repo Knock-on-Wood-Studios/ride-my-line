@@ -11,7 +11,7 @@
   var STALL_MS = 2800;
   var RUN_MAX_MS = 14000;
   var STEP = 1000 / 60;
-  var RESULT_DELAY_MS = 820;
+  var RESULT_DELAY_MS = 980;
 
   var CAT_WORLD = 0x0001;
   var CAT_CART = 0x0002;
@@ -597,7 +597,7 @@
     if (state !== STATE_RUN || ended) return;
     var pairs = ev.pairs;
     for (var i = 0; i < pairs.length; i++) {
-      if (pairHas(pairs[i], "chassis", "flag")) { finish(true); return; }
+      if (pairHas(pairs[i], "chassis", "flag") && cartUpright()) { finish(true); return; }
       if (!starGot && (pairHas(pairs[i], "chassis", "star") || pairHas(pairs[i], "wheel", "star"))) {
         collectStar();
       }
@@ -608,12 +608,17 @@
     return lab === "track" || lab === "platform" || lab === "ice" || lab === "wall";
   }
 
+  function cartUpright() {
+    if (!cart) return false;
+    return Math.abs(wrapAngle(cart.chassis.angle)) < 1.25;
+  }
+
   function onCollideStart(ev) {
     if (state !== STATE_RUN || ended) return;
     var pairs = ev.pairs;
     for (var i = 0; i < pairs.length; i++) {
       var pair = pairs[i];
-      if (pairHas(pair, "chassis", "flag")) { finish(true); return; }
+      if (pairHas(pair, "chassis", "flag") && cartUpright()) { finish(true); return; }
       if (!starGot && (pairHas(pair, "chassis", "star") || pairHas(pair, "wheel", "star"))) {
         collectStar();
       }
@@ -621,9 +626,10 @@
         : pair.bodyB.label === "chassis" ? pair.bodyB : null;
       var other = ch === pair.bodyA ? pair.bodyB : pair.bodyA;
       if (ch && other && isSolidLabel(other.label)) {
-        var flat = Math.abs(Math.sin(other.angle || 0)) < 0.38;
+        var flat = Math.abs(Math.sin(other.angle || 0)) < 0.32;
         var vy = ch.velocity.y;
-        if (flat && vy > 15.5) {
+        var mostlyDown = vy > 12 && vy > ch.speed * 0.6;
+        if (flat && mostlyDown) {
           crashReason = "bonk";
           finish(false);
           return;
@@ -723,7 +729,7 @@
     } else {
       flipMs = 0;
     }
-    if (Math.abs(pos.x - level.flag.x) < 28 && pos.y < level.flag.y + 10 && pos.y > level.flag.y - 90) {
+    if (cartUpright() && Math.abs(pos.x - level.flag.x) < 28 && pos.y < level.flag.y + 10 && pos.y > level.flag.y - 90) {
       finish(true);
     }
     if (level.star && !starGot && Math.hypot(pos.x - level.star.x, pos.y - level.star.y) < 34) {
@@ -860,7 +866,7 @@
     el.statScore.textContent = String(scoreFor(won));
     if (el.hint) el.hint.textContent = won ? "again?" : "redraw it";
     if (el.btnNext) {
-      var hasNext = won && levelIndex + 1 < LEVELS.length;
+      var hasNext = !!(won && levelIndex + 1 < LEVELS.length && levelIndex + 1 < unlockedCount);
       if (hasNext) el.btnNext.classList.remove("hidden");
       else el.btnNext.classList.add("hidden");
     }
@@ -911,6 +917,7 @@
   function loadLevel(index, opts) {
     opts = opts || {};
     if (!LEVELS.length) return;
+    if (index >= unlockedCount) index = unlockedCount - 1;
     levelIndex = clamp(index, 0, LEVELS.length - 1);
     level = LEVELS[levelIndex];
     if (opts.clearLine !== false) strokes = [];
@@ -960,7 +967,9 @@
   }
 
   function goNextYard() {
+    if (state !== STATE_WIN) return;
     if (levelIndex + 1 >= LEVELS.length) return;
+    if (levelIndex + 1 >= unlockedCount) return;
     loadLevel(levelIndex + 1, { clearLine: true });
   }
 
@@ -1440,17 +1449,17 @@
     };
     switch (finishAnim.name) {
       case "hop":
-        pose.y -= Math.sin(k * Math.PI) * 38;
-        pose.way -= Math.sin(k * Math.PI) * 38;
-        pose.wby -= Math.sin(k * Math.PI) * 38;
+        pose.y -= Math.sin(k * Math.PI) * 56;
+        pose.way -= Math.sin(k * Math.PI) * 56;
+        pose.wby -= Math.sin(k * Math.PI) * 56;
         pose.arms = "up";
         break;
       case "bow":
-        pose.ang += Math.sin(k * Math.PI) * 0.72;
+        pose.ang += Math.sin(k * Math.PI) * 0.95;
         break;
       case "turtle":
-        pose.ang = Math.PI + Math.sin(k * 10) * 0.1 * (1 - k);
-        pose.y -= 6;
+        pose.ang = Math.PI + Math.sin(k * 10) * 0.14 * (1 - k);
+        pose.y -= 14;
         break;
       case "bonk":
         pose.crumple = e;
@@ -1497,26 +1506,51 @@
     if (!finishAnim.active || finishAnim.name !== "stamp" || !finishAnim.stamp) return;
     var k = clamp(finishAnim.t / finishAnim.dur, 0, 1);
     var punch = k < 0.18 ? k / 0.18 : 1;
-    var fade = k > 0.75 ? 1 - (k - 0.75) / 0.25 : 1;
-    var pose = liveCartPose();
+    var fade = k > 0.82 ? 1 - (k - 0.82) / 0.18 : 1;
     c.save();
-    c.translate(pose.x + 8, pose.y - 90);
-    c.rotate(-0.18);
-    c.scale(0.7 + punch * 0.55, 0.7 + punch * 0.55);
+    c.translate(DESIGN_W * 0.5, 340);
+    c.rotate(-0.16);
+    c.scale(0.85 + punch * 0.55, 0.85 + punch * 0.55);
     c.globalAlpha = fade;
     c.strokeStyle = "#d4542a";
-    c.fillStyle = "rgba(212,84,42,0.12)";
-    c.lineWidth = 4;
-    c.font = "700 42px Segoe Print, Comic Sans MS, cursive";
+    c.fillStyle = "rgba(212,84,42,0.14)";
+    c.lineWidth = 5;
+    c.font = "700 54px Segoe Print, Comic Sans MS, cursive";
     c.textAlign = "center";
     c.textBaseline = "middle";
-    var w = c.measureText(finishAnim.stamp).width + 28;
+    var w = c.measureText(finishAnim.stamp).width + 36;
     c.beginPath();
-    c.rect(-w * 0.5, -28, w, 56);
+    c.rect(-w * 0.5, -34, w, 68);
     c.fill();
     c.stroke();
     c.fillStyle = "#d4542a";
     c.fillText(finishAnim.stamp, 0, 2);
+    c.restore();
+  }
+
+  function drawAnimScribble(c) {
+    if (!finishAnim.active) return;
+    var k = clamp(finishAnim.t / finishAnim.dur, 0, 1);
+    var word = "";
+    if (finishAnim.name === "turtle") word = "WHOOPS";
+    else if (finishAnim.name === "bonk") word = "BONK";
+    else if (finishAnim.name === "yeet") word = "YEET";
+    else if (finishAnim.name === "dirt") word = "FWUMP";
+    else if (finishAnim.name === "stuck") word = "SIGH";
+    else if (finishAnim.name === "hop") word = "YEEHAW";
+    else if (finishAnim.name === "bow") word = "THANK U";
+    if (!word || finishAnim.name === "stamp") return;
+    var fade = k < 0.15 ? k / 0.15 : (k > 0.8 ? 1 - (k - 0.8) / 0.2 : 1);
+    c.save();
+    c.globalAlpha = fade;
+    c.fillStyle = "#d4542a";
+    c.strokeStyle = "#2a2218";
+    c.lineWidth = 2;
+    c.font = "700 28px Segoe Print, Comic Sans MS, cursive";
+    c.textAlign = "center";
+    c.translate(DESIGN_W * 0.5 + Math.sin(k * 8) * 3, 300);
+    c.rotate(-0.12);
+    c.fillText(word, 0, 0);
     c.restore();
   }
 
@@ -1591,6 +1625,7 @@
     drawPops(ctx);
     drawStarBurstAnim(ctx);
     drawStamp(ctx);
+    drawAnimScribble(ctx);
 
     ctx.strokeStyle = "rgba(42,34,24,0.35)";
     ctx.lineWidth = 3;
