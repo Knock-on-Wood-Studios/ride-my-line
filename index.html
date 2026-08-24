@@ -15,12 +15,15 @@
       <header class="topbar">
         <div class="brand">
           <h1>Ride My Line</h1>
-          <p class="hint" id="hint">Draw one track · tap GO</p>
+          <p class="hint" id="hint">draw the catch · tap GO</p>
         </div>
         <div class="meta">
+          <button type="button" id="yardChip" class="chip chip-btn" aria-expanded="false" aria-controls="yardList">yard 1/10</button>
           <span id="attemptChip" class="chip">try 1</span>
         </div>
       </header>
+
+      <div id="yardList" class="yard-list hidden" role="listbox" aria-label="Yards"></div>
 
       <div class="ink-wrap">
         <span class="ink-label">INK</span>
@@ -49,6 +52,7 @@
           <li><span>Score</span><strong id="statScore">0</strong></li>
         </ul>
         <button type="button" id="btnAgain" class="btn btn-go btn-again">PLAY AGAIN</button>
+        <button type="button" id="btnNext" class="btn btn-next hidden">NEXT YARD</button>
         <button type="button" id="btnResetLine" class="btn btn-ghost">RESET LINE</button>
       </div>
     </div>
@@ -62,6 +66,7 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/matter-js@0.19.0/build/matter.min.js"></script>
+  <script src="levels.js"></script>
   <script src="game.js"></script>
 </body>
 </html>
