@@ -2,7 +2,7 @@
 
 Knock on Wood Studios prototype.
 
-Draw a track. Ride a junk wagon across the gap. Miss, curse, redraw in five seconds.
+Draw a catch. A junk wagon drops off a high ledge. Gravity spends the speed. Miss, curse, redraw in five seconds.
 
 ## Why a vehicle, not liquid
 
@@ -10,10 +10,12 @@ The player is a stick rider in a two-wheel cart, not a puddle of lava. Liquid (l
 
 ## How to play
 
-1. Draw one track across the gap (finger or mouse). Ink is limited.
-2. Tap GO. The cart rolls. Gravity is snappy.
-3. Reach the flag. The star is greedy: a worse line, extra points.
-4. Wipe out? PLAY AGAIN keeps your line. RESET LINE starts the scribble over. Either way, under a second.
+1. You start on yard 1 of 10. A high ledge, a gap, a flag. Draw the catch (finger or mouse). Ink is limited.
+2. Tap GO. The cart rolls off the ledge and drops in. A short shove, then physics owns it.
+3. A curve that meets the fall whooshes. A flat bridge under a tall drop pancakes. Reach the flag.
+4. The star is greedy: a worse line, extra points. Skip it if you want the flag only.
+5. Wipe out? PLAY AGAIN keeps your line. RESET LINE starts the scribble over. Either way, under a second.
+6. Clear a yard to unlock the next. Replay any unlocked yard from the tiny yard chip. NEXT YARD is on the result card.
 
 ## Local preview
 
@@ -24,8 +26,8 @@ Example: python3 -m http.server 8765 then visit http://127.0.0.1:8765/
 
 ## What this proto is testing
 
-Retry in five seconds. Draw, fail funny, redraw immediately. Almost no tutorial.
+Drop-in start. Draw a catch, fail funny, redraw immediately. Ten yards, no campaign chrome. Almost no tutorial.
 
 ## Out of scope
 
-Economy, login, 15 levels, share URLs, audio, ragdoll rider, liquid player, accounts, ads.
+Economy, login, share URLs, audio, ragdoll rider, liquid player, accounts, ads, shop.

@@ -80,6 +80,13 @@ body {
   color: var(--ink-soft);
 }
 
+.meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+}
+
 .chip {
   display: inline-block;
   padding: 4px 10px;
@@ -89,6 +96,66 @@ body {
   font-size: 12px;
   font-weight: 700;
   transform: rotate(3deg);
+}
+
+.chip-btn {
+  pointer-events: auto;
+  appearance: none;
+  -webkit-appearance: none;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transform: rotate(-2deg);
+}
+
+.chip-btn:active {
+  transform: translate(1px, 1px) rotate(-2deg);
+}
+
+.yard-list {
+  pointer-events: auto;
+  align-self: flex-end;
+  margin-top: 8px;
+  width: min(260px, 72%);
+  background: #fff8ee;
+  border: 3px solid var(--ink);
+  border-radius: 8px 18px 10px 14px;
+  padding: 8px;
+  box-shadow: 4px 5px 0 var(--shadow);
+  transform: rotate(1deg);
+  z-index: 4;
+}
+
+.yard-list button {
+  display: block;
+  width: 100%;
+  text-align: left;
+  appearance: none;
+  -webkit-appearance: none;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink);
+  padding: 6px 8px;
+  cursor: pointer;
+  border-radius: 8px;
+}
+
+.yard-list button:hover:not(:disabled) {
+  background: #f0e4cc;
+}
+
+.yard-list button.current {
+  background: #f7d3c4;
+}
+
+.yard-list button:disabled {
+  color: var(--ink-soft);
+  opacity: 0.45;
+  cursor: default;
 }
 
 .ink-wrap {
@@ -208,6 +275,20 @@ body {
   font-size: 26px;
   transform: rotate(-1deg);
   margin-top: 8px;
+}
+
+.btn-next {
+  width: 100%;
+  margin-top: 10px;
+  padding: 12px 18px;
+  border-radius: 14px;
+  font-size: 16px;
+  background: #fff8ee;
+  transform: rotate(1deg);
+}
+
+.btn-next.hidden {
+  display: none;
 }
 
 .result,
