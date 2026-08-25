@@ -2,7 +2,7 @@
 
 Audit date: August 25, 2026  
 Release: 1.0.0  
-Application commit: `7766a2b`  
+Application commit: `40ccc15`  
 Cloudflare deployment: `5f296eca-8c2e-4ad1-9f4e-91cdf5c53b67`  
 Public URL: <https://ride-my-line.robertwood50.workers.dev>
 
