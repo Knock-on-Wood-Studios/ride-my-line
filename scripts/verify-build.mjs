@@ -31,10 +31,16 @@ assert.match(manifest.buildVersion, /^[a-f0-9]{12}$/);
 assert.match(manifest.cacheVersion, /^[a-f0-9]{12}$/);
 assert.ok(html.includes(`name="build-version" content="${manifest.buildVersion}"`));
 assert.doesNotMatch(html, /content="dev"/);
+assert.match(html, /<link rel="canonical" href="https:\/\/ride-my-line\.robertwood50\.workers\.dev\/"/);
+assert.match(html, /property="og:image" content="https:\/\/ride-my-line\.robertwood50\.workers\.dev\/assets\/brand\/ride-my-line-share\.png"/);
 assert.match(serviceWorker, /pathname\.startsWith\("\/api\/"\)/);
 assert.match(serviceWorker, /\/assets\/audio\/ride-my-line-backyard-loop\.mp3/);
 assert.match(serviceWorker, /\/privacy\.html/);
+assert.match(serviceWorker, /\/robots\.txt/);
+assert.match(serviceWorker, /\/sitemap\.xml/);
 assert.match(headers, /Content-Security-Policy:/);
+await access(join(dist, "robots.txt"));
+await access(join(dist, "sitemap.xml"));
 
 const allFiles = await files(dist);
 const totalBytes = (await Promise.all(allFiles.map(async (path) => (await stat(path)).size))).reduce((sum, size) => sum + size, 0);

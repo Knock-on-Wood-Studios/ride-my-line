@@ -24,5 +24,6 @@ test("the application shell contains no inline executable content", () => {
   assert.doesNotMatch(html, /<script(?![^>]*\bsrc=)[^>]*>/i);
   assert.doesNotMatch(html, /<style\b/i);
   assert.doesNotMatch(html, /\sstyle=/i);
-  assert.doesNotMatch(html, /https?:\/\//i);
+  assert.doesNotMatch(html, /<script[^>]*\bsrc=["']https?:\/\//i);
+  assert.doesNotMatch(html, /<link[^>]*\brel=["']stylesheet["'][^>]*\bhref=["']https?:\/\//i);
 });

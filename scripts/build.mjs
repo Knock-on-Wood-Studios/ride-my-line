@@ -75,6 +75,8 @@ await writeFile(join(dist, "index.html"), html);
 await cp(join(root, "assets"), join(dist, "assets"), { recursive: true });
 await cp(join(root, "_headers"), join(dist, "_headers"));
 await cp(join(root, "manifest.webmanifest"), join(dist, "manifest.webmanifest"));
+await cp(join(root, "robots.txt"), join(dist, "robots.txt"));
+await cp(join(root, "sitemap.xml"), join(dist, "sitemap.xml"));
 await cp(join(root, "legal.css"), join(dist, "legal.css"));
 for (const page of ["privacy.html", "terms.html", "support.html"]) {
   await cp(join(root, page), join(dist, page));
@@ -82,6 +84,8 @@ for (const page of ["privacy.html", "terms.html", "support.html"]) {
 
 const stableFiles = [
   { source: join(root, "manifest.webmanifest"), url: "/manifest.webmanifest" },
+  { source: join(root, "robots.txt"), url: "/robots.txt" },
+  { source: join(root, "sitemap.xml"), url: "/sitemap.xml" },
   { source: join(root, "legal.css"), url: "/legal.css" },
   { source: join(root, "privacy.html"), url: "/privacy.html" },
   { source: join(root, "terms.html"), url: "/terms.html" },
