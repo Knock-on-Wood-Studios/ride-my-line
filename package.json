@@ -1,0 +1,13 @@
+{
+  "name": "ride-my-line",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "build": "mkdir -p dist && cp index.html styles.css game.js levels.js dist/ && if [ -d assets ]; then cp -R assets dist/; fi",
+    "dev": "npm run build && wrangler dev",
+    "deploy": "npm run build && wrangler deploy"
+  },
+  "devDependencies": {
+    "wrangler": "4.125.0"
+  }
+}

@@ -5,9 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
   <meta name="theme-color" content="#f4efe2" />
   <title>Ride My Line</title>
-  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="styles.css?v=0.3.25" />
 </head>
-<body>
+<body data-music="assets/audio/ride-my-line-backyard-loop.mp3">
   <div id="app">
     <canvas id="game" style="touch-action:none"></canvas>
 
@@ -15,18 +15,21 @@
       <header class="topbar">
         <div class="brand">
           <h1>Ride My Line</h1>
-          <p class="hint" id="hint">draw the catch · tap GO</p>
+          <p class="hint" id="hint" aria-live="polite">DRAW THE CATCH · reach the flag</p>
         </div>
         <div class="meta">
-          <button type="button" id="yardChip" class="chip chip-btn" aria-expanded="false" aria-controls="yardList">yard 1/10</button>
-          <span id="attemptChip" class="chip">try 1</span>
+          <button type="button" id="yardChip" class="chip chip-btn" aria-expanded="false" aria-controls="yardList">yard 1/12</button>
+          <div class="meta-row">
+            <span id="attemptChip" class="chip">try 1</span>
+            <button type="button" id="soundToggle" class="chip chip-btn sound-chip" aria-pressed="true" aria-label="Mute sound">SOUND ON</button>
+          </div>
         </div>
       </header>
 
       <div id="yardList" class="yard-list hidden" role="listbox" aria-label="Yards"></div>
 
       <div class="ink-wrap">
-        <span class="ink-label">INK</span>
+        <span class="ink-label" id="inkLabel">INK</span>
         <div class="ink-track" aria-hidden="true">
           <div id="inkFill" class="ink-fill"></div>
         </div>
@@ -66,7 +69,7 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/matter-js@0.19.0/build/matter.min.js"></script>
-  <script src="levels.js"></script>
-  <script src="game.js"></script>
+  <script src="levels.js?v=0.3.36"></script>
+  <script src="game.js?v=0.3.36"></script>
 </body>
 </html>

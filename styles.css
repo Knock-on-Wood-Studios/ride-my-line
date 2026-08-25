@@ -100,6 +100,13 @@ body {
   gap: 6px;
 }
 
+.meta-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 5px;
+}
+
 .chip {
   display: inline-block;
   padding: 4px 10px;
@@ -124,6 +131,22 @@ body {
 
 .chip-btn:active {
   transform: translate(1px, 1px) rotate(-2deg);
+}
+
+.sound-chip {
+  padding: 4px 7px;
+  font-size: 9px;
+  letter-spacing: 0.035em;
+  transform: rotate(1deg);
+}
+
+.sound-chip:active {
+  transform: translate(1px, 1px) rotate(1deg);
+}
+
+.sound-chip[aria-pressed="false"] {
+  color: var(--ink-soft);
+  background: var(--paper-deep);
 }
 
 .yard-list {
@@ -180,6 +203,7 @@ body {
 }
 
 .ink-label {
+  min-width: 52px;
   font-size: 12px;
   font-weight: 800;
   letter-spacing: 0.12em;
@@ -200,7 +224,7 @@ body {
   width: 100%;
   background: linear-gradient(90deg, #3a332b 0%, #2a2218 70%, #d4542a 140%);
   transform-origin: left center;
-  transition: width 80ms linear;
+  transition: transform 80ms linear;
 }
 
 .ink-fill.low {
@@ -256,6 +280,13 @@ body {
   cursor: default;
   box-shadow: 2px 2px 0 var(--shadow);
   transform: none;
+}
+
+.btn:focus-visible,
+.chip-btn:focus-visible,
+.yard-list button:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 3px;
 }
 
 .btn-ghost {
@@ -360,10 +391,11 @@ body {
 }
 
 .result-stars {
-  min-height: 36px;
-  font-size: 28px;
+  min-height: 28px;
+  font-size: 13px;
+  font-weight: 800;
   margin-bottom: 8px;
-  letter-spacing: 0.2em;
+  letter-spacing: 0.035em;
 }
 
 .result-stats {
@@ -424,5 +456,11 @@ body {
     width: 112px;
     height: 112px;
     font-size: 32px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ink-fill {
+    transition: none;
   }
 }
