@@ -26,7 +26,7 @@ main {
 
 .eyebrow {
   margin: 0 0 8px;
-  color: var(--accent);
+  color: #9e3518;
   font-size: 13px;
   font-weight: 800;
   letter-spacing: 0.12em;
@@ -53,4 +53,9 @@ a:focus-visible { outline: 3px solid var(--accent); outline-offset: 4px; }
   color: var(--ink);
   text-decoration: none;
   box-shadow: 2px 3px 0 var(--ink);
+}
+
+@media (forced-colors: active) {
+  a:focus-visible { outline-color: Highlight; }
+  .back { border-color: ButtonText; box-shadow: none; }
 }

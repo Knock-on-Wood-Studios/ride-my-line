@@ -604,6 +604,19 @@ body {
   }
 }
 
+@media (max-width: 359px) {
+  .hud {
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+
+  .topbar { gap: 6px; }
+  .brand h1 { font-size: 20px; }
+  .hint { font-size: 9px; }
+  .chip-btn { font-size: 11px; }
+  .sound-chip { font-size: 10px; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .ink-fill {
     transition: none;

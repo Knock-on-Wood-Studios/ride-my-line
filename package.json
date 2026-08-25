@@ -1,10 +1,13 @@
 {
   "name": "ride-my-line",
-  "version": "0.1.0",
+  "version": "1.0.0",
+  "description": "Draw-and-ride browser physics game by Knock on Wood Studios",
   "private": true,
   "type": "module",
+  "license": "UNLICENSED",
+  "repository": "https://github.com/Knock-on-Wood-Studios/ride-my-line.git",
   "engines": {
-    "node": ">=20"
+    "node": ">=22"
   },
   "scripts": {
     "validate": "node scripts/validate-levels.mjs",

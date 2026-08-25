@@ -1,5 +1,5 @@
 /* Ride My Line — Knock on Wood Studios
-   Vanilla Matter.js proto. Vehicle cart, not liquid. */
+   Vanilla Matter.js production game. Vehicle cart, not liquid. */
 (function () {
   "use strict";
 
@@ -30,8 +30,9 @@
   var STORAGE_VOICES = "kow.rideMyLine.voices";
   var CURRENT_STORAGE_VERSION = 2;
 
-  var devMode = typeof window !== "undefined" &&
+  var localHost = typeof window !== "undefined" &&
     (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1" || window.location.hostname === "::1");
+  var devMode = localHost && new URLSearchParams(window.location.search).get("production") !== "1";
 
   var WIN_ANIMS = ["hop", "flag-wave", "star-burst", "bow", "stamp"];
   var FAIL_ANIMS = ["turtle", "bonk", "yeet", "dirt", "stuck"];
@@ -326,7 +327,6 @@
 
 
   function storageGet(key, fallback) {
-    if (devMode) return fallback;
     try {
       var v = window.localStorage.getItem(key);
       return v == null ? fallback : v;
@@ -337,7 +337,6 @@
   }
 
   function storageSet(key, value) {
-    if (devMode) return true;
     try {
       window.localStorage.setItem(key, value);
       return true;
@@ -394,7 +393,6 @@
   }
 
   function migrateStorage() {
-    if (devMode) return;
     var version = parseInt(storageGet(STORAGE_VERSION, "0"), 10) || 0;
     if (version < 2) {
       var medals = storageGet(STORAGE_MEDALS, "{}");
@@ -545,8 +543,23 @@
     canvas.setAttribute(
       "aria-label",
       "Yard " + (levelIndex + 1) + " of " + LEVELS.length + ", " + level.name + ". " +
-      level.objective + ". " + left + "% ink remaining."
+      level.objective + ". " + levelRuleDescription() + " " + left + "% ink remaining."
     );
+  }
+
+  function levelRuleDescription() {
+    if (!level) return "";
+    var rules = levelRules();
+    var details = [];
+    if ((rules.drawZones || []).length) details.push("Draw only inside the green dashed boxes.");
+    if ((rules.noDrawZones || []).length) details.push("Red crossed boxes do not accept ink.");
+    if ((rules.anchors || []).length) details.push("Each line must connect two orange pins.");
+    if ((level.checkpoints || []).length) details.push("Pass the numbered directional rings in order.");
+    if (rules.material === "rubber") details.push("Rubber ink rebounds.");
+    else if (rules.material === "ice") details.push("Ice ink preserves speed.");
+    if (level.cargo) details.push("Protect the fragile cargo.");
+    details.push("Use at most " + rules.maxStrokes + (rules.maxStrokes === 1 ? " line." : " lines."));
+    return details.join(" ");
   }
 
   function announceStatus(message) {
@@ -2011,7 +2024,7 @@
     updateYardHud();
     persistLastYard();
     TELEMETRY.track("yard_loaded", { yard: level.id, input: lastInputMethod });
-    announceStatus("Yard " + (levelIndex + 1) + ", " + level.name + ". " + level.objective + ". Draw a line and press Enter or choose Go.");
+    announceStatus("Yard " + (levelIndex + 1) + ", " + level.name + ". " + level.objective + ". " + levelRuleDescription() + " Draw a line and press Enter or choose Go.");
   }
 
   function resetToDraw(clearLine) {
