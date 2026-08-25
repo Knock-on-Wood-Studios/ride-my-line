@@ -10,7 +10,7 @@ The player is a stick rider in a two-wheel cart, not a puddle of lava. Liquid (l
 
 ## How to play
 
-1. You start on yard 1 of 12. A high ledge, a gap, a flag. Draw the catch (finger or mouse). Ink is limited.
+1. You start on yard 1 of 25. A high ledge, a gap, a flag. Draw the catch (finger or mouse). Ink is limited.
 2. Tap GO. The cart rolls off the ledge and drops in. A short shove, then physics owns it.
 3. A curve that meets the fall whooshes. A flat bridge under a tall drop pancakes. Reach the flag.
 4. The star is greedy: a worse line, extra points. Skip it if you want the flag only.
@@ -19,13 +19,13 @@ The player is a stick rider in a two-wheel cart, not a puddle of lava. Liquid (l
 
 ## Challenge slice
 
-The controls stay the same in every yard: draw, then tap GO. The first three yards teach the basics in sequence: a free draw, a labeled green drawing zone, then a forgiving two-line gap with a red no-ink area. After that, gravity, rebound, suspension, friction, wind, and launch speed ramp quickly, while later yards add anchor pins, directional rings, mandatory gaps, rubber and ice ink, fragile cargo, and controlled finishes. The repeated-swoop regression still fails before the advanced campaign, so the opening yards stay forgiving without becoming one-move copies. Each real solution can earn up to three persistent medals: clear the contract, collect the star, and beat the ink par.
+The controls stay the same in every yard: draw, then tap GO. The first three yards teach the basics in sequence: a free draw, a labeled green drawing zone, then a forgiving two-line gap with a red no-ink area. Yards 4–12 ramp gravity, rebound, suspension, friction, wind, launch speed, anchor pins, directional rings, mandatory gaps, rubber and ice ink, fragile cargo, and controlled finishes. Yards 13–25 form a mastery run that recombines those visible rules into tailwind turns, ice needles, rubber relays, pinned deliveries, three-gap stitches, storm gates, and a three-stage parking finale. Twelve sampled yards reject the repeated generic swoop. Each real solution can earn up to three persistent medals: clear the contract, collect the star, and beat the ink par.
 
 ## Local preview
 
 Install dependencies with `npm ci`, then run `npm run dev`. The production build vendors the pinned Matter.js package and writes content-hashed assets to `dist/`.
 
-Use `npm run check` for level validation, unit tests, syntax checks, and a production build. Use `npm run test:e2e` for the 12-yard authored-solution suite and the repeated-swoop regression.
+Use `npm run check` for level validation, unit tests, syntax checks, and a production build. Use `npm run test:e2e` for the 25-yard authored-solution suite and the repeated-swoop regression.
 
 Every level is checked for ordered IDs, supported mechanics, valid geometry and ranges, complete reference segments, anchors, checkpoint directions, differentiating mechanics, difficulty progression, ink-budget feasibility, and craft-medal feasibility before a build can complete. `npm run report:levels` prints the campaign’s difficulty and mechanic matrix.
 
@@ -46,7 +46,7 @@ Release, rollback, monitoring, playtest, and level-expansion procedures live in 
 
 ## Core loop
 
-Drop-in start. Draw a catch, fail funny, redraw immediately. Twelve yards, no campaign chrome. Almost no tutorial.
+Drop-in start. Draw a catch, fail funny, redraw immediately. Twenty-five yards, no campaign chrome. Almost no tutorial.
 
 ## Intentionally out of scope for this release
 

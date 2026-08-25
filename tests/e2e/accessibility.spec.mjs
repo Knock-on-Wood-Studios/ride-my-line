@@ -46,9 +46,9 @@ test("campaign progress reset requires an explicit second action", async ({ page
   const reset = page.locator(".yard-reset");
   await reset.click();
   await expect(reset).toHaveText("CONFIRM RESET");
-  await expect(page.locator("#yardChip")).toHaveText("yard 6/12");
+  await expect(page.locator("#yardChip")).toHaveText("yard 6/25");
   await reset.click();
-  await expect(page.locator("#yardChip")).toHaveText("yard 1/12");
+  await expect(page.locator("#yardChip")).toHaveText("yard 1/25");
   await page.locator("#yardChip").click();
   await expect(page.locator('#yardList button[data-yard="1"]')).toBeDisabled();
 });

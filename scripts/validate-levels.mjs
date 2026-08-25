@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url";
 import vm from "node:vm";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
-const sourcePath = resolve(root, "levels.js");
+const sourcePaths = [resolve(root, "levels.js"), resolve(root, "levels-launch.js")];
 const DESIGN_WIDTH = 720;
 const DESIGN_HEIGHT = 1280;
 const MATERIALS = new Set(["chalk", "rubber", "ice"]);
@@ -70,16 +70,18 @@ export function levelMechanics(level) {
   return mechanics;
 }
 
-export async function loadLevels(path = sourcePath) {
-  const source = await readFile(path, "utf8");
-  const adjacentDuplicate = source.match(/^\s*([A-Za-z_$][\w$]*):[^\n]*\n\s*\1:/m);
-  if (adjacentDuplicate) {
-    throw new Error(`Duplicate adjacent key in levels source: ${adjacentDuplicate[1]}`);
-  }
-
+export async function loadLevels(paths = sourcePaths) {
+  if (!Array.isArray(paths)) paths = [paths];
   const sandbox = {};
   sandbox.window = sandbox;
-  vm.runInNewContext(source, sandbox, { filename: path });
+  for (const path of paths) {
+    const source = await readFile(path, "utf8");
+    const adjacentDuplicate = source.match(/^\s*([A-Za-z_$][\w$]*):[^\n]*\n\s*\1:/m);
+    if (adjacentDuplicate) {
+      throw new Error(`Duplicate adjacent key in ${path}: ${adjacentDuplicate[1]}`);
+    }
+    vm.runInNewContext(source, sandbox, { filename: path });
+  }
   if (!Array.isArray(sandbox.RML_LEVELS)) throw new Error("levels.js did not define RML_LEVELS");
   return sandbox.RML_LEVELS;
 }
@@ -99,8 +101,8 @@ export function validateLevels(levels) {
     ids.add(level?.id);
     if (typeof level?.name !== "string" || !level.name.trim()) errors.push(`${label}: name is required`);
     if (typeof level?.objective !== "string" || !level.objective.trim()) errors.push(`${label}: objective is required`);
-    if (!Number.isInteger(level?.difficulty) || level.difficulty < 1 || level.difficulty > 10) {
-      errors.push(`${label}: difficulty must be an integer from 1 to 10`);
+    if (!Number.isInteger(level?.difficulty) || level.difficulty < 1 || level.difficulty > 15) {
+      errors.push(`${label}: difficulty must be an integer from 1 to 15`);
     }
     if (!finiteNumber(level?.inkMax) || level.inkMax <= 0) errors.push(`${label}: inkMax must be positive`);
     if (!Number.isInteger(level?.rules?.maxStrokes) || level.rules.maxStrokes < 1 || level.rules.maxStrokes > 3) {
@@ -226,6 +228,9 @@ export function validateLevels(levels) {
     if (index >= 3 && levelMechanics(level).filter((mechanic) => mechanic !== "draw-zone").length < 2) {
       errors.push(`${label}: advanced yards require at least two differentiating mechanics`);
     }
+    if (index >= 12 && levelMechanics(level).filter((mechanic) => mechanic !== "draw-zone").length < 4) {
+      errors.push(`${label}: mastery yards require at least four differentiating mechanics`);
+    }
   });
 
   if (levels.length >= 3) {
@@ -237,6 +242,7 @@ export function validateLevels(levels) {
     if (levels[index]?.difficulty < levels[index - 1]?.difficulty) errors.push(`${levels[index]?.id}: difficulty must not decrease`);
   }
   if (levels[3] && levels[3].difficulty < 5) errors.push(`${levels[3].id}: the advanced campaign must ramp to difficulty 5 or higher`);
+  if (levels[12] && levels[12].difficulty < 11) errors.push(`${levels[12].id}: the mastery campaign must ramp to difficulty 11 or higher`);
 
   return errors;
 }

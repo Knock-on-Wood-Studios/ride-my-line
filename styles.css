@@ -293,6 +293,24 @@ body {
   border-radius: 8px;
 }
 
+.yard-section {
+  position: sticky;
+  top: -8px;
+  z-index: 1;
+  margin: 0;
+  padding: 8px 8px 6px;
+  background: #fff8ee;
+  color: var(--ink-soft);
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+}
+
+.yard-section:not(:first-child) {
+  margin-top: 6px;
+  border-top: 1px dashed var(--ink-soft);
+}
+
 .yard-list button:hover:not(:disabled) {
   background: #f0e4cc;
 }

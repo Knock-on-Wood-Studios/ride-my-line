@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.1.0 — 2026-08-25
+
+- Expanded the launch campaign from 12 to 25 authored yards without adding new player controls.
+- Added a difficulty 11–15 mastery run combining tailwind, crosswind, ice, rubber, anchor pins, fragile cargo, three-stroke gaps, speed gates, and precision parking.
+- Split late-campaign content into its own validated data file so future seasons can grow without turning the opening campaign into one oversized asset.
+- Expanded the authored-solution and generic-move regression gates to cover the complete campaign, with per-yard physics diagnostics for failures.
+- Added opening-run and mastery-run labels to the scrolling yard picker and richer screen-reader descriptions for wind zones and solid obstacles.
+
 ## 1.0.0 — 2026-08-25
 
 - Shipped a twelve-yard campaign with a three-yard onboarding arc and sharply escalating physics, materials, zones, anchors, checkpoints, wind, cargo, and finish contracts.

@@ -19,7 +19,7 @@ Recruit at least 12 people who have not watched the yard being solved. Include t
 - At least 80% correctly explain the green draw zone after Yard 2 and the red no-ink zone after Yard 3.
 - At least 70% clear each of Yards 1–3 within five attempts without coaching.
 - Advanced yards must not have a zero-clear cohort and should generally land between 15% and 60% first-session clear rate.
-- No single generic stroke may clear more than half of Yards 4–12.
+- No single generic stroke may clear more than half of Yards 4–25; the automated repeated-swoop sample must remain at zero clears.
 - At least 80% can retry or reset without asking.
 - Every failure must be explainable from the visible rule and result copy.
 - No repeated report of nausea, unreadable focus, blocked zoom, inaudible critical feedback, or an unreachable 44px target ships unresolved.

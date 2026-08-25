@@ -53,7 +53,7 @@ test("corrupt saved values recover to a playable first yard", async ({ page }) =
     localStorage.setItem("kow.rideMyLine.lastYard", "missing-yard");
   });
   await page.goto("/?production=1");
-  await expect(page.locator("#yardChip")).toHaveText("yard 1/12");
+  await expect(page.locator("#yardChip")).toHaveText("yard 1/25");
   await expect(page.locator("#game")).toBeVisible();
   await expect(page.locator("body")).toHaveAttribute("data-storage", "available");
 });

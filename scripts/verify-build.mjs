@@ -21,7 +21,7 @@ const html = await readFile(join(dist, "index.html"), "utf8");
 const serviceWorker = await readFile(join(dist, "service-worker.js"), "utf8");
 const headers = await readFile(join(dist, "_headers"), "utf8");
 
-for (const key of ["styleAsset", "levelsAsset", "telemetryAsset", "audioAsset", "gameAsset", "pwaAsset", "matterAsset"]) {
+for (const key of ["styleAsset", "levelsAsset", "launchLevelsAsset", "telemetryAsset", "audioAsset", "gameAsset", "pwaAsset", "matterAsset"]) {
   assert.match(manifest[key], /^static\/[a-z.-]+\.[a-f0-9]{12}\.(?:css|js)$/);
   await access(join(dist, manifest[key]));
   assert.ok(html.includes(manifest[key]), `${key} is not linked from the built document`);

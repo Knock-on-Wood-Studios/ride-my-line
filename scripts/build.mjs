@@ -42,6 +42,7 @@ await mkdir(staticDir, { recursive: true });
 
 const styleAsset = await emitHashed(join(root, "styles.css"), "styles.css");
 const levelsAsset = await emitHashed(join(root, "levels.js"), "levels.js");
+const launchLevelsAsset = await emitHashed(join(root, "levels-launch.js"), "levels-launch.js");
 const telemetryAsset = await emitHashed(join(root, "telemetry.js"), "telemetry.js");
 const audioAsset = await emitHashed(join(root, "audio.js"), "audio.js");
 const gameAsset = await emitHashed(join(root, "game.js"), "game.js");
@@ -56,6 +57,7 @@ const replacements = [
   [/href="styles\.css"/, `href="${styleAsset}"`],
   [/src="vendor\/matter\.min\.js"/, `src="${matterAsset}"`],
   [/src="levels\.js"/, `src="${levelsAsset}"`],
+  [/src="levels-launch\.js"/, `src="${launchLevelsAsset}"`],
   [/src="telemetry\.js"/, `src="${telemetryAsset}"`],
   [/src="audio\.js"/, `src="${audioAsset}"`],
   [/src="game\.js"/, `src="${gameAsset}"`],
@@ -67,7 +69,7 @@ for (const [pattern, replacement] of replacements) {
   html = html.replace(pattern, replacement);
 }
 
-const buildVersion = digest([styleAsset, levelsAsset, telemetryAsset, audioAsset, gameAsset, pwaAsset, matterAsset].join("|"));
+const buildVersion = digest([styleAsset, levelsAsset, launchLevelsAsset, telemetryAsset, audioAsset, gameAsset, pwaAsset, matterAsset].join("|"));
 if (!/name="build-version" content="dev"/.test(html)) throw new Error("Build version placeholder not found");
 html = html.replace(/name="build-version" content="dev"/, `name="build-version" content="${buildVersion}"`);
 
@@ -97,6 +99,7 @@ const precache = [
   "/index.html",
   `/${styleAsset}`,
   `/${levelsAsset}`,
+  `/${launchLevelsAsset}`,
   `/${telemetryAsset}`,
   `/${audioAsset}`,
   `/${gameAsset}`,
@@ -144,7 +147,7 @@ self.addEventListener("fetch", (event) => {
 await writeFile(join(dist, "service-worker.js"), serviceWorker);
 await writeFile(
   join(dist, "build-manifest.json"),
-  `${JSON.stringify({ buildVersion, styleAsset, levelsAsset, telemetryAsset, audioAsset, gameAsset, pwaAsset, matterAsset, cacheVersion }, null, 2)}\n`
+  `${JSON.stringify({ buildVersion, styleAsset, levelsAsset, launchLevelsAsset, telemetryAsset, audioAsset, gameAsset, pwaAsset, matterAsset, cacheVersion }, null, 2)}\n`
 );
 
 console.log(`Built Ride My Line into ${dist}`);

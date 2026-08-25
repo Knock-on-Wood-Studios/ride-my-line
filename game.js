@@ -555,6 +555,8 @@
     if ((rules.noDrawZones || []).length) details.push("Red crossed boxes do not accept ink.");
     if ((rules.anchors || []).length) details.push("Each line must connect two orange pins.");
     if ((level.checkpoints || []).length) details.push("Pass the numbered directional rings in order.");
+    if ((level.fields || []).length) details.push("Arrow-marked wind zones push the cart.");
+    if ((level.extras || []).length) details.push("Wooden obstacles are solid.");
     if (rules.material === "rubber") details.push("Rubber ink rebounds.");
     else if (rules.material === "ice") details.push("Ice ink preserves speed.");
     if (level.cargo) details.push("Protect the fragile cargo.");
@@ -578,6 +580,12 @@
     if (!el.yardList) return;
     el.yardList.innerHTML = "";
     for (var i = 0; i < LEVELS.length; i++) {
+      if (i === 0 || i === 12) {
+        var section = document.createElement("p");
+        section.className = "yard-section";
+        section.textContent = i === 0 ? "OPENING RUN · 1–12" : "MASTERY RUN · 13–25";
+        el.yardList.appendChild(section);
+      }
       var btn = document.createElement("button");
       btn.type = "button";
       var open = i < unlockedCount;
@@ -1799,6 +1807,8 @@
       document.body.dataset.lastMaxSpeed = String(Math.round(maxRunSpeed * 100) / 100);
       document.body.dataset.lastMaxImpact = String(Math.round(maxImpactSeen * 100) / 100);
       document.body.dataset.lastCheckpoints = String(checkpointHits.filter(function (hit) { return hit; }).length);
+      document.body.dataset.lastX = cart ? String(Math.round(cart.chassis.position.x)) : "0";
+      document.body.dataset.lastY = cart ? String(Math.round(cart.chassis.position.y)) : "0";
     }
     startFinishAnim(won);
     announceStatus(won ? "Yard cleared." : "Attempt failed: " + (crashReason || "wipeout") + ".");

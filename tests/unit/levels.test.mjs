@@ -5,6 +5,7 @@ import { loadLevels, validateLevels } from "../../scripts/validate-levels.mjs";
 const levels = await loadLevels();
 
 test("the complete authored campaign passes schema validation", () => {
+  assert.equal(levels.length, 25);
   assert.deepEqual(validateLevels(levels), []);
 });
 
@@ -64,4 +65,14 @@ test("unknown physics knobs are rejected instead of silently ignored", () => {
   copy[4].physics.magicBoost = 99;
   const errors = validateLevels(copy);
   assert.ok(errors.some((error) => error.includes("invalid physics magicBoost")));
+});
+
+test("the mastery run escalates through a diverse mechanic palette", () => {
+  const mastery = levels.slice(12);
+  assert.deepEqual(Array.from(new Set(mastery.map((level) => level.rules.material))).sort(), ["chalk", "ice", "rubber"]);
+  assert.ok(mastery.some((level) => level.rules.maxStrokes === 3));
+  assert.ok(mastery.some((level) => level.rules.anchors?.length === 4));
+  assert.ok(mastery.filter((level) => level.cargo).length >= 2);
+  assert.ok(mastery.filter((level) => level.fields?.length).length >= 4);
+  assert.equal(mastery.at(-1).difficulty, 15);
 });

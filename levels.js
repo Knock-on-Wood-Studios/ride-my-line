@@ -1,4 +1,4 @@
-/* Ride My Line — twelve-yard challenge slice. Data only. */
+/* Ride My Line — opening yards 1–12. Data only. */
 (function (root) {
   "use strict";
 

@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 
 test("the complete control surface fits a 320 by 568 viewport", async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 568 });
-  await page.goto("/?yard=12");
+  await page.goto("/?yard=25");
   const layout = await page.evaluate(() => {
     const title = document.querySelector(".brand h1");
     const visibleButtons = [...document.querySelectorAll("button")].filter((button) => {
@@ -30,10 +30,12 @@ test("the complete control surface fits a 320 by 568 viewport", async ({ page })
   }
 });
 
-test("the twelve-yard chooser scrolls within a short phone", async ({ page }) => {
+test("the twenty-five-yard chooser scrolls within a short phone", async ({ page }) => {
   await page.setViewportSize({ width: 375, height: 667 });
   await page.goto("/?yard=1");
   await page.locator("#yardChip").click();
+  await expect(page.locator("#yardList button[data-yard]")).toHaveCount(25);
+  await expect(page.locator(".yard-section")).toHaveText(["OPENING RUN · 1–12", "MASTERY RUN · 13–25"]);
   const dimensions = await page.locator("#yardList").evaluate((list) => {
     const rect = list.getBoundingClientRect();
     return { bottom: rect.bottom, clientHeight: list.clientHeight, scrollHeight: list.scrollHeight, viewport: innerHeight };
