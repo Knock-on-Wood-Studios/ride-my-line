@@ -23,9 +23,11 @@ The controls stay the same in every yard: draw, then tap GO. The first three yar
 
 ## Local preview
 
-Run `npm run dev`, or open `index.html` through any static host. Matter.js comes from a CDN. `npm run build` copies the deployable game into `dist/`.
+Install dependencies with `npm ci`, then run `npm run dev`. The production build vendors the pinned Matter.js package and writes content-hashed assets to `dist/`.
 
-Example: python3 -m http.server 8765 then visit http://127.0.0.1:8765/
+Use `npm run check` for level validation, unit tests, syntax checks, and a production build. Use `npm run test:e2e` for the 12-yard authored-solution suite and the repeated-swoop regression.
+
+Every level is checked for ordered IDs, supported mechanics, valid geometry, legal reference strokes, checkpoint directions, and ink-budget feasibility before a build can complete. GitHub Actions runs the same gates on every pull request and push to `main`.
 
 ## Audio
 
