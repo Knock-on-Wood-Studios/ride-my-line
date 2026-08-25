@@ -127,7 +127,12 @@ self.addEventListener("fetch", (event) => {
         caches.open(CACHE).then((cache) => cache.put(cacheKey, response.clone()));
       }
       return response;
-    }).catch(() => caches.match(request).then((cached) => cached || caches.match("/index.html"))));
+    }).catch(() => caches.match(request).then((cached) => {
+      if (cached) return cached;
+      const pathname = new URL(request.url).pathname;
+      if (["/privacy", "/terms", "/support"].includes(pathname)) return caches.match(pathname + ".html");
+      return caches.match("/index.html");
+    })));
     return;
   }
   event.respondWith(caches.match(request).then((cached) => cached || fetch(request).then((response) => {

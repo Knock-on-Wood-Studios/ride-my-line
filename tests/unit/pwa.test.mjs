@@ -7,6 +7,10 @@ const manifest = JSON.parse(await readFile(new URL("manifest.webmanifest", root)
 const html = await readFile(new URL("index.html", root), "utf8");
 const robots = await readFile(new URL("robots.txt", root), "utf8");
 const sitemap = await readFile(new URL("sitemap.xml", root), "utf8");
+const legalPages = await Promise.all(["privacy", "terms", "support"].map(async (page) => ({
+  page,
+  html: await readFile(new URL(`${page}.html`, root), "utf8")
+})));
 
 test("the install manifest has a stable identity and complete icon set", async () => {
   assert.equal(manifest.id, "/");
@@ -26,6 +30,11 @@ test("production discovery and share metadata use the canonical public URL", () 
   assert.match(html, /property="og:image" content="https:\/\/ride-my-line\.robertwood50\.workers\.dev\/assets\/brand\/ride-my-line-share\.png"/);
   assert.match(robots, /Sitemap: https:\/\/ride-my-line\.robertwood50\.workers\.dev\/sitemap\.xml/);
   assert.match(sitemap, /<loc>https:\/\/ride-my-line\.robertwood50\.workers\.dev\/<\/loc>/);
+  assert.doesNotMatch(sitemap, /\.html<\/loc>/);
+  for (const item of legalPages) {
+    assert.match(item.html, new RegExp(`<link rel="canonical" href="${publicUrl}${item.page}"`));
+    assert.match(sitemap, new RegExp(`<loc>${publicUrl}${item.page}</loc>`));
+  }
 });
 
 test("player-facing privacy, terms, and support pages are checked in", async () => {
