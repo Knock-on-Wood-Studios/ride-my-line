@@ -24,6 +24,11 @@
   var STORAGE_WIN_ANIM = "kow.rideMyLine.lastWinAnim";
   var STORAGE_FAIL_ANIM = "kow.rideMyLine.lastFailAnim";
   var STORAGE_MUTED = "kow.rideMyLine.muted";
+  var STORAGE_VERSION = "kow.rideMyLine.storageVersion";
+  var STORAGE_MUSIC = "kow.rideMyLine.music";
+  var STORAGE_EFFECTS = "kow.rideMyLine.effects";
+  var STORAGE_VOICES = "kow.rideMyLine.voices";
+  var CURRENT_STORAGE_VERSION = 2;
 
   var devMode = typeof window !== "undefined" &&
     (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1" || window.location.hostname === "::1");
@@ -91,6 +96,20 @@
   var windSoundMs = 0;
   var pencilSoundMs = 0;
   var reduceMotion = false;
+  var motionQuery = null;
+  var keyboardCursor = { x: 0, y: 0 };
+  var keyboardDrawing = false;
+  var resultReturnFocus = null;
+  var frameId = 0;
+  var pageVisible = !document.hidden;
+  var hiddenAt = 0;
+  var staticLayer = null;
+  var staticLayerLevel = "";
+  var renderCount = 0;
+  var storageAvailable = true;
+  var resetProgressArmed = false;
+  var resetProgressTimer = 0;
+  var lastInputMethod = "unknown";
   var lastWinAnim = "";
   var lastFailAnim = "";
   var lastStamp = "";
@@ -108,319 +127,27 @@
   var canvas, ctx;
   var el = {};
 
-  var SOUND = (function () {
-    var audioCtx = null;
-    var master = null;
-    var musicBus = null;
-    var sfxBus = null;
-    var compressor = null;
-    var noiseBuffer = null;
-    var musicTimer = 0;
-    var nextMusicAt = 0;
-    var musicStep = 0;
-    var musicStarted = false;
-    var musicElement = null;
-    var musicSource = null;
-    var mode = "draw";
-    var muted = false;
-    var visible = true;
-    var voiceCounter = 0;
-    var duckTimer = 0;
-
-    function ensure() {
-      if (audioCtx) return true;
-      var AudioCtor = window.AudioContext || window.webkitAudioContext;
-      if (!AudioCtor) return false;
-      audioCtx = new AudioCtor();
-      master = audioCtx.createGain();
-      musicBus = audioCtx.createGain();
-      sfxBus = audioCtx.createGain();
-      compressor = audioCtx.createDynamicsCompressor();
-      compressor.threshold.value = -14;
-      compressor.knee.value = 16;
-      compressor.ratio.value = 5;
-      compressor.attack.value = 0.004;
-      compressor.release.value = 0.18;
-      musicBus.gain.value = 0.0001;
-      sfxBus.gain.value = 0.82;
-      master.gain.value = muted ? 0 : 0.92;
-      musicBus.connect(compressor);
-      sfxBus.connect(compressor);
-      compressor.connect(master);
-      master.connect(audioCtx.destination);
-
-      noiseBuffer = audioCtx.createBuffer(1, Math.floor(audioCtx.sampleRate * 0.7), audioCtx.sampleRate);
-      var data = noiseBuffer.getChannelData(0);
-      for (var i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
-      return true;
+  var SOUND = window.RML_AUDIO || {
+    unlock: function () { return false; },
+    startMusic: function () {},
+    play: function () {},
+    say: function () {},
+    impact: function () {},
+    setMode: function () {},
+    setMuted: function () {},
+    isMuted: function () { return true; },
+    setVisible: function () {},
+    setSettings: function () {},
+    getSettings: function () { return { music: false, sfx: false, voices: false }; },
+    debug: function () {
+      return { state: "unavailable", mode: "silent", musicStarted: false, realAssets: false, loadedSamples: 0, failedSamples: ["audio-director"] };
     }
-
-    function modeVolume() {
-      if (mode === "run") return 0.105;
-      if (mode === "result") return 0.045;
-      return 0.066;
-    }
-
-    function rampMusic(value, seconds) {
-      if (!audioCtx || !musicBus) return;
-      var now = audioCtx.currentTime;
-      musicBus.gain.cancelScheduledValues(now);
-      musicBus.gain.setValueAtTime(Math.max(0.0001, musicBus.gain.value), now);
-      musicBus.gain.exponentialRampToValueAtTime(Math.max(0.0001, value), now + (seconds || 0.12));
-    }
-
-    function tone(freqA, freqB, duration, gain, when, type, bus) {
-      if (!audioCtx) return;
-      var start = when == null ? audioCtx.currentTime : when;
-      var osc = audioCtx.createOscillator();
-      var amp = audioCtx.createGain();
-      osc.type = type || "sine";
-      osc.frequency.setValueAtTime(Math.max(30, freqA), start);
-      osc.frequency.exponentialRampToValueAtTime(Math.max(30, freqB == null ? freqA : freqB), start + duration);
-      amp.gain.setValueAtTime(0.0001, start);
-      amp.gain.exponentialRampToValueAtTime(Math.max(0.0001, gain), start + 0.012);
-      amp.gain.exponentialRampToValueAtTime(0.0001, start + duration);
-      osc.connect(amp);
-      amp.connect(bus || sfxBus);
-      osc.start(start);
-      osc.stop(start + duration + 0.03);
-    }
-
-    function noise(duration, gain, when, filterType, frequency, bus) {
-      if (!audioCtx || !noiseBuffer) return;
-      var start = when == null ? audioCtx.currentTime : when;
-      var source = audioCtx.createBufferSource();
-      var filter = audioCtx.createBiquadFilter();
-      var amp = audioCtx.createGain();
-      source.buffer = noiseBuffer;
-      filter.type = filterType || "bandpass";
-      filter.frequency.value = frequency || 900;
-      filter.Q.value = filter.type === "bandpass" ? 0.8 : 0.2;
-      amp.gain.setValueAtTime(Math.max(0.0001, gain), start);
-      amp.gain.exponentialRampToValueAtTime(0.0001, start + duration);
-      source.connect(filter);
-      filter.connect(amp);
-      amp.connect(bus || sfxBus);
-      source.start(start, Math.random() * 0.2, duration);
-      source.stop(start + duration + 0.02);
-    }
-
-    function musicNote(midi, when, gain, duration) {
-      var freq = 440 * Math.pow(2, (midi - 69) / 12);
-      tone(freq, freq * 0.995, duration || 0.24, gain, when, "triangle", musicBus);
-      tone(freq * 2, freq * 1.98, Math.min(0.12, duration || 0.12), gain * 0.14, when, "sine", musicBus);
-    }
-
-    function scheduleMusic() {
-      if (!audioCtx || !visible || audioCtx.state !== "running") return;
-      if (nextMusicAt < audioCtx.currentTime - 0.5) nextMusicAt = audioCtx.currentTime + 0.04;
-      var melody = [64, null, 67, null, 71, 67, 72, null, 71, null, 67, 64, 62, null, 59, null];
-      var bass = [45, null, null, null, 45, null, null, null, 43, null, null, null, 40, null, null, null];
-      var stepDuration = 60 / 104 / 2;
-      while (nextMusicAt < audioCtx.currentTime + 0.32) {
-        var step = musicStep % melody.length;
-        var active = mode === "run" || step % 4 === 0;
-        if (melody[step] != null && active) musicNote(melody[step], nextMusicAt, mode === "run" ? 0.12 : 0.085, 0.2);
-        if (bass[step] != null) musicNote(bass[step], nextMusicAt, mode === "run" ? 0.11 : 0.075, 0.3);
-        if (mode === "run" && step % 2 === 1) noise(0.035, 0.022, nextMusicAt, "highpass", 3300, musicBus);
-        if (step % 8 === 4) noise(0.055, mode === "run" ? 0.032 : 0.018, nextMusicAt, "bandpass", 680, musicBus);
-        nextMusicAt += stepDuration;
-        musicStep += 1;
-      }
-    }
-
-    function startProceduralMusic() {
-      if (musicTimer) return;
-      nextMusicAt = audioCtx.currentTime + 0.05;
-      musicTimer = window.setInterval(scheduleMusic, 90);
-      scheduleMusic();
-    }
-
-    function startLicensedMusic(url) {
-      if (!url || musicElement) return false;
-      try {
-        musicElement = new Audio(url);
-        musicElement.loop = true;
-        musicElement.preload = "auto";
-        musicElement.playsInline = true;
-        musicSource = audioCtx.createMediaElementSource(musicElement);
-        musicSource.connect(musicBus);
-        var playResult = musicElement.play();
-        if (playResult && playResult.catch) {
-          playResult.catch(function () {
-            musicElement = null;
-            musicSource = null;
-            startProceduralMusic();
-          });
-        }
-        return true;
-      } catch (err) {
-        musicElement = null;
-        musicSource = null;
-        return false;
-      }
-    }
-
-    function startMusic() {
-      if (!ensure()) return;
-      if (musicStarted) return;
-      musicStarted = true;
-      var licensedUrl = document.body ? document.body.getAttribute("data-music") : "";
-      if (!startLicensedMusic(licensedUrl)) startProceduralMusic();
-      rampMusic(modeVolume(), 0.28);
-    }
-
-    function unlock(withMusic) {
-      if (!ensure()) return false;
-      if (audioCtx.state === "suspended") audioCtx.resume();
-      if (withMusic) startMusic();
-      return true;
-    }
-
-    function duck(duration) {
-      if (!audioCtx || !musicStarted) return;
-      window.clearTimeout(duckTimer);
-      rampMusic(0.018, 0.045);
-      duckTimer = window.setTimeout(function () { rampMusic(modeVolume(), 0.22); }, duration || 650);
-    }
-
-    function play(name, intensity) {
-      if (muted || !visible || !unlock(false)) return;
-      var now = audioCtx.currentTime;
-      var amount = clamp(intensity == null ? 0.6 : intensity, 0.15, 1);
-      if (name === "pencil") {
-        noise(0.025, 0.018 + amount * 0.02, now, "highpass", 1700);
-      } else if (name === "go") {
-        tone(180, 310, 0.13, 0.12, now, "triangle");
-        tone(300, 520, 0.1, 0.08, now + 0.075, "triangle");
-      } else if (name === "ring") {
-        tone(620, 760, 0.16, 0.13, now, "sine");
-        tone(880, 1040, 0.22, 0.09, now + 0.08, "sine");
-      } else if (name === "star") {
-        tone(880, 1320, 0.18, 0.11, now, "sine");
-        tone(1320, 1760, 0.2, 0.08, now + 0.07, "sine");
-      } else if (name === "rubber") {
-        tone(210, 90, 0.19, 0.11 * amount, now, "sine");
-        tone(120, 180, 0.12, 0.07 * amount, now + 0.04, "triangle");
-      } else if (name === "ice") {
-        noise(0.12, 0.055 * amount, now, "highpass", 4200);
-        tone(980, 720, 0.11, 0.025 * amount, now, "sine");
-      } else if (name === "impact") {
-        noise(0.085, 0.085 * amount, now, "bandpass", 520);
-        tone(145, 72, 0.13, 0.1 * amount, now, "triangle");
-      } else if (name === "cargo") {
-        noise(0.22, 0.12, now, "highpass", 2100);
-        tone(430, 180, 0.18, 0.11, now, "square");
-        tone(360, 140, 0.2, 0.09, now + 0.06, "square");
-      } else if (name === "wind") {
-        noise(0.24, 0.027 * amount, now, "bandpass", 1250);
-      } else if (name === "roll") {
-        noise(0.035, 0.018 * amount, now, "lowpass", 540);
-      } else if (name === "win") {
-        musicNote(64, now, 0.18, 0.28);
-        musicNote(67, now + 0.08, 0.17, 0.3);
-        musicNote(72, now + 0.16, 0.2, 0.42);
-        duck(560);
-      } else if (name === "fail") {
-        tone(260, 105, 0.36, 0.14, now, "triangle");
-        noise(0.15, 0.07, now + 0.08, "bandpass", 480);
-        duck(520);
-      } else if (name === "toggle") {
-        tone(520, 680, 0.12, 0.08, now, "sine");
-      } else if (name === "voice-weee") {
-        tone(520, 760, 0.42, 0.08, now, "sawtooth");
-        tone(740, 980, 0.4, 0.035, now + 0.03, "sine");
-      } else if (name === "voice-shriek") {
-        tone(760, 1260, 0.48, 0.09, now, "sawtooth");
-        tone(1120, 840, 0.42, 0.04, now + 0.08, "sine");
-      }
-    }
-
-    function localVoice() {
-      if (!window.speechSynthesis) return null;
-      var voices = window.speechSynthesis.getVoices ? window.speechSynthesis.getVoices() : [];
-      for (var i = 0; i < voices.length; i++) {
-        if (/^en/i.test(voices[i].lang || "") && voices[i].localService !== false) return voices[i];
-      }
-      return null;
-    }
-
-    function say(kind, intensity) {
-      if (muted || !visible) return;
-      var phrases = kind === "shriek"
-        ? ["Aaaah!", "Oh nooo!", "Yikes!"]
-        : ["Weeeee!", "Wahoooo!", "Wheeee!"];
-      var phrase = phrases[(voiceCounter + levelIndex + attempts) % phrases.length];
-      voiceCounter += 1;
-      var voice = localVoice();
-      if (!voice || !window.SpeechSynthesisUtterance) {
-        play(kind === "shriek" ? "voice-shriek" : "voice-weee", intensity);
-        duck(kind === "shriek" ? 720 : 620);
-        return;
-      }
-      if (kind === "shriek" && window.speechSynthesis.speaking) window.speechSynthesis.cancel();
-      var utterance = new SpeechSynthesisUtterance(phrase);
-      utterance.voice = voice;
-      utterance.volume = 0.66;
-      utterance.pitch = kind === "shriek" ? 1.82 : 1.58;
-      utterance.rate = kind === "shriek" ? 1.32 : 1.16;
-      duck(kind === "shriek" ? 820 : 720);
-      window.speechSynthesis.speak(utterance);
-    }
-
-    function impact(material, intensity) {
-      if (material === "rubber") play("rubber", intensity);
-      else if (material === "ice") play("ice", intensity);
-      else play("impact", intensity);
-    }
-
-    function setMode(nextMode) {
-      mode = nextMode || "draw";
-      if (musicStarted) rampMusic(modeVolume(), 0.2);
-    }
-
-    function setMuted(nextMuted) {
-      muted = !!nextMuted;
-      if (master && audioCtx) {
-        var now = audioCtx.currentTime;
-        master.gain.cancelScheduledValues(now);
-        master.gain.setTargetAtTime(muted ? 0 : 0.92, now, 0.025);
-      }
-      if (muted && window.speechSynthesis) window.speechSynthesis.cancel();
-    }
-
-    function setVisible(nextVisible) {
-      visible = !!nextVisible;
-      if (!audioCtx) return;
-      if (!visible && audioCtx.state === "running") audioCtx.suspend();
-      else if (visible && !muted && audioCtx.state === "suspended") {
-        audioCtx.resume();
-        nextMusicAt = audioCtx.currentTime + 0.05;
-      }
-    }
-
-    return {
-      unlock: unlock,
-      startMusic: startMusic,
-      play: play,
-      say: say,
-      impact: impact,
-      setMode: setMode,
-      setMuted: setMuted,
-      isMuted: function () { return muted; },
-      setVisible: setVisible,
-      debug: function () {
-        return {
-          available: !!audioCtx,
-          state: audioCtx ? audioCtx.state : "idle",
-          mode: mode,
-          muted: muted,
-          musicStarted: musicStarted,
-          usingLicensedTrack: !!musicElement
-        };
-      }
-    };
-  })();
+  };
+  var TELEMETRY = window.RML_TELEMETRY || {
+    track: function () {},
+    flush: function () {},
+    isEnabled: function () { return false; }
+  };
 
 
   function clamp(v, a, b) { return v < a ? a : v > b ? b : v; }
@@ -557,7 +284,9 @@
   function resize() {
     var w = window.innerWidth;
     var h = window.innerHeight;
-    var dpr = Math.min(window.devicePixelRatio || 1, 2.5);
+    var requestedDpr = Math.min(window.devicePixelRatio || 1, 2);
+    var pixelBudgetDpr = Math.sqrt(4000000 / Math.max(1, w * h));
+    var dpr = Math.max(0.75, Math.min(requestedDpr, pixelBudgetDpr));
     canvas.width = Math.max(1, Math.floor(w * dpr));
     canvas.height = Math.max(1, Math.floor(h * dpr));
     canvas.style.width = w + "px";
@@ -572,6 +301,7 @@
     pinStage(el.hud);
     pinStage(el.result);
     pinStage(el.bootError);
+    requestFrame();
   }
 
   function screenToDesign(clientX, clientY) {
@@ -601,13 +331,87 @@
       var v = window.localStorage.getItem(key);
       return v == null ? fallback : v;
     } catch (err) {
+      storageAvailable = false;
       return fallback;
     }
   }
 
   function storageSet(key, value) {
+    if (devMode) return true;
+    try {
+      window.localStorage.setItem(key, value);
+      return true;
+    } catch (err) {
+      storageAvailable = false;
+      return false;
+    }
+  }
+
+  function resetCampaignProgress() {
+    if (resetProgressTimer) window.clearTimeout(resetProgressTimer);
+    resetProgressTimer = 0;
+    resetProgressArmed = false;
+    bestMedals = {};
+    unlockedCount = 1;
+    lastWinAnim = "";
+    lastFailAnim = "";
+    storageSet(STORAGE_UNLOCK, "1");
+    storageSet(STORAGE_LAST, LEVELS[0] ? LEVELS[0].id : "");
+    storageSet(STORAGE_MEDALS, "{}");
+    storageSet(STORAGE_WIN_ANIM, "");
+    storageSet(STORAGE_FAIL_ANIM, "");
+    TELEMETRY.track("progress_reset", { yard: LEVELS[0] ? LEVELS[0].id : "none", input: lastInputMethod });
+    hideYardList();
+    loadLevel(0, { clearLine: true });
+    announceStatus("Campaign progress reset. Yard 1 is ready.");
+    canvas.focus();
+  }
+
+  function armProgressReset(button) {
+    if (resetProgressArmed) {
+      resetCampaignProgress();
+      return;
+    }
+    resetProgressArmed = true;
+    button.textContent = "CONFIRM RESET";
+    button.setAttribute("aria-label", "Confirm reset campaign progress");
+    announceStatus("Press Confirm Reset to erase medals and locked-yard progress. Sound settings will stay unchanged.");
+    if (resetProgressTimer) window.clearTimeout(resetProgressTimer);
+    resetProgressTimer = window.setTimeout(function () {
+      resetProgressArmed = false;
+      resetProgressTimer = 0;
+      if (button && button.isConnected) {
+        button.textContent = "RESET PROGRESS";
+        button.setAttribute("aria-label", "Reset campaign progress");
+      }
+    }, 6000);
+  }
+
+  function cancelProgressReset() {
+    resetProgressArmed = false;
+    if (resetProgressTimer) window.clearTimeout(resetProgressTimer);
+    resetProgressTimer = 0;
+  }
+
+  function migrateStorage() {
     if (devMode) return;
-    try { window.localStorage.setItem(key, value); } catch (err) { /* ignore */ }
+    var version = parseInt(storageGet(STORAGE_VERSION, "0"), 10) || 0;
+    if (version < 2) {
+      var medals = storageGet(STORAGE_MEDALS, "{}");
+      try { JSON.parse(medals); } catch (error) { storageSet(STORAGE_MEDALS, "{}"); }
+      storageSet(STORAGE_MUSIC, storageGet(STORAGE_MUSIC, "1"));
+      storageSet(STORAGE_EFFECTS, storageGet(STORAGE_EFFECTS, "1"));
+      storageSet(STORAGE_VOICES, storageGet(STORAGE_VOICES, "1"));
+    }
+    storageSet(STORAGE_VERSION, String(CURRENT_STORAGE_VERSION));
+  }
+
+  function loadAudioSettings() {
+    return {
+      music: storageGet(STORAGE_MUSIC, "1") !== "0",
+      sfx: storageGet(STORAGE_EFFECTS, "1") !== "0",
+      voices: storageGet(STORAGE_VOICES, "1") !== "0"
+    };
   }
 
   function loadProgress() {
@@ -645,10 +449,21 @@
   function updateSoundHud() {
     if (!el.soundToggle) return;
     var on = !SOUND.isMuted();
+    var settings = SOUND.getSettings();
     el.soundToggle.textContent = on ? "SOUND ON" : "SOUND OFF";
-    el.soundToggle.setAttribute("aria-pressed", on ? "true" : "false");
-    el.soundToggle.setAttribute("aria-label", on ? "Mute sound" : "Turn sound on");
+    el.soundToggle.setAttribute("aria-label", "Sound settings, " + (on ? "sound on" : "sound muted"));
+    updateAudioSwitch(el.masterAudioToggle, on);
+    updateAudioSwitch(el.musicToggle, settings.music);
+    updateAudioSwitch(el.effectsToggle, settings.sfx);
+    updateAudioSwitch(el.voicesToggle, settings.voices);
     updateAudioDebug();
+  }
+
+  function updateAudioSwitch(button, on) {
+    if (!button) return;
+    button.setAttribute("aria-checked", on ? "true" : "false");
+    var value = button.querySelector("strong");
+    if (value) value.textContent = on ? "ON" : "OFF";
   }
 
   function updateAudioDebug() {
@@ -657,7 +472,9 @@
     document.body.dataset.audioState = debug.state;
     document.body.dataset.audioMode = debug.mode;
     document.body.dataset.audioMusic = debug.musicStarted ? "started" : "idle";
-    document.body.dataset.audioSource = debug.usingLicensedTrack ? "licensed" : "procedural";
+    document.body.dataset.audioSource = debug.realAssets ? "licensed-assets" : "unavailable";
+    document.body.dataset.audioSamples = String(debug.loadedSamples || 0);
+    document.body.dataset.audioFailures = (debug.failedSamples || []).join(",");
   }
 
   function toggleSound() {
@@ -672,6 +489,36 @@
     window.setTimeout(updateAudioDebug, 80);
   }
 
+  function toggleAudioCategory(category) {
+    var settings = SOUND.getSettings();
+    settings[category] = !settings[category];
+    SOUND.setSettings(settings);
+    if (category === "music") storageSet(STORAGE_MUSIC, settings.music ? "1" : "0");
+    else if (category === "sfx") storageSet(STORAGE_EFFECTS, settings.sfx ? "1" : "0");
+    else if (category === "voices") storageSet(STORAGE_VOICES, settings.voices ? "1" : "0");
+    updateSoundHud();
+    if (settings.sfx && category === "sfx") SOUND.play("toggle", 0.45);
+  }
+
+  function hideAudioPanel() {
+    if (!el.audioPanel) return;
+    el.audioPanel.classList.add("hidden");
+    if (el.soundToggle) el.soundToggle.setAttribute("aria-expanded", "false");
+  }
+
+  function toggleAudioPanel() {
+    if (!el.audioPanel) return;
+    var opening = el.audioPanel.classList.contains("hidden");
+    hideYardList();
+    if (!opening) {
+      hideAudioPanel();
+      return;
+    }
+    el.audioPanel.classList.remove("hidden");
+    el.soundToggle.setAttribute("aria-expanded", "true");
+    window.requestAnimationFrame(function () { el.masterAudioToggle.focus(); });
+  }
+
 
   function updateInkHud() {
     var used = totalInk();
@@ -683,7 +530,27 @@
       else el.inkFill.classList.remove("low");
     }
     if (el.inkPct) el.inkPct.textContent = Math.round(left * 100) + "%";
+    if (el.inkTrack) {
+      el.inkTrack.setAttribute("aria-valuenow", String(Math.round(left * 100)));
+      el.inkTrack.setAttribute("aria-valuetext", Math.round(left * 100) + "% ink remaining");
+    }
     if (el.inkLabel) el.inkLabel.textContent = trackMaterial() === "chalk" ? "INK" : trackMaterial().toUpperCase();
+    updateCanvasDescription();
+    requestFrame();
+  }
+
+  function updateCanvasDescription() {
+    if (!canvas || !level) return;
+    var left = Math.round(clamp(1 - totalInk() / inkMax(), 0, 1) * 100);
+    canvas.setAttribute(
+      "aria-label",
+      "Yard " + (levelIndex + 1) + " of " + LEVELS.length + ", " + level.name + ". " +
+      level.objective + ". " + left + "% ink remaining."
+    );
+  }
+
+  function announceStatus(message) {
+    if (el.gameStatus) el.gameStatus.textContent = message;
   }
 
   function updateYardHud() {
@@ -700,14 +567,16 @@
     for (var i = 0; i < LEVELS.length; i++) {
       var btn = document.createElement("button");
       btn.type = "button";
-      btn.setAttribute("role", "option");
       var open = i < unlockedCount;
       btn.disabled = !open;
       var medalTag = bestMedals[LEVELS[i].id] ? "  ·  " + bestMedals[LEVELS[i].id] + "/3" : "";
       btn.textContent = open
         ? (i + 1) + "  " + LEVELS[i].name + medalTag
         : (i + 1) + "  —";
-      if (i === levelIndex) btn.className = "current";
+      if (i === levelIndex) {
+        btn.className = "current";
+        btn.setAttribute("aria-current", "step");
+      }
       btn.setAttribute("data-yard", String(i));
       if (open) {
         btn.addEventListener("click", (function (idx) {
@@ -715,15 +584,27 @@
             e.preventDefault();
             hideYardList();
             if (idx !== levelIndex) loadLevel(idx, { clearLine: true });
+            canvas.focus();
           };
         })(i));
       }
       el.yardList.appendChild(btn);
     }
+    var reset = document.createElement("button");
+    reset.type = "button";
+    reset.className = "yard-reset";
+    reset.textContent = resetProgressArmed ? "CONFIRM RESET" : "RESET PROGRESS";
+    reset.setAttribute("aria-label", resetProgressArmed ? "Confirm reset campaign progress" : "Reset campaign progress");
+    reset.addEventListener("click", function (e) {
+      e.preventDefault();
+      armProgressReset(reset);
+    });
+    el.yardList.appendChild(reset);
   }
 
   function hideYardList() {
     if (!el.yardList) return;
+    cancelProgressReset();
     el.yardList.classList.add("hidden");
     if (el.yardChip) el.yardChip.setAttribute("aria-expanded", "false");
   }
@@ -732,9 +613,15 @@
     if (!el.yardList) return;
     var open = el.yardList.classList.contains("hidden");
     if (open) {
+      hideAudioPanel();
       renderYardList();
       el.yardList.classList.remove("hidden");
       if (el.yardChip) el.yardChip.setAttribute("aria-expanded", "true");
+      window.requestAnimationFrame(function () {
+        var current = el.yardList.querySelector("button.current:not(:disabled)");
+        var first = el.yardList.querySelector("button:not(:disabled)");
+        if (current || first) (current || first).focus();
+      });
     } else {
       hideYardList();
     }
@@ -767,6 +654,7 @@
 
   function onPointerDown(e) {
     if (state !== STATE_DRAW) return;
+    lastInputMethod = e.type.indexOf("touch") === 0 ? "touch" : "pointer";
     hideYardList();
     if (!canDraw()) {
       e.preventDefault();
@@ -863,6 +751,152 @@
     updateInkHud();
   }
 
+  function resetKeyboardCursor() {
+    var anchors = levelRules().anchors || [];
+    var start = anchors.length
+      ? anchors[0]
+      : { x: level.ledge.x + level.ledge.w - 10, y: level.ledge.y + 12 };
+    keyboardCursor = { x: start.x, y: start.y };
+    keyboardDrawing = false;
+  }
+
+  function startKeyboardStroke() {
+    if (!canDraw()) {
+      var exhausted = strokes.length >= maxStrokes() ? "All lines are already used." : "No ink remains.";
+      showDrawNudge(exhausted.toUpperCase());
+      announceStatus(exhausted + " Reset the line to draw again.");
+      return;
+    }
+    var point = { x: keyboardCursor.x, y: keyboardCursor.y };
+    var issue = pointIssue(point);
+    if (issue) {
+      nudgePointIssue(issue);
+      announceStatus(issue === "no-draw" ? "The pen is inside a red no-ink area." : "The pen is outside the green drawing area.");
+      return;
+    }
+    var anchors = levelRules().anchors || [];
+    strokeStartAnchor = -1;
+    if (anchors.length) {
+      strokeStartAnchor = nearestAnchor(point, 44, -1);
+      if (strokeStartAnchor < 0) {
+        showDrawNudge("START ON A PIN");
+        announceStatus("Move the pen onto a pin before starting this line.");
+        return;
+      }
+      point = { x: anchors[strokeStartAnchor].x, y: anchors[strokeStartAnchor].y };
+      keyboardCursor = { x: point.x, y: point.y };
+    }
+    strokes.push([point]);
+    keyboardDrawing = true;
+    SOUND.unlock(false);
+    SOUND.play("pencil", 0.36);
+    updateInkHud();
+    announceStatus("Line started. Use the arrow keys to draw, then press Space to finish.");
+  }
+
+  function finishKeyboardStroke() {
+    var stroke = strokes[strokes.length - 1];
+    if (!keyboardDrawing || !stroke) return;
+    var anchors = levelRules().anchors || [];
+    if (anchors.length) {
+      var endAnchor = nearestAnchor(keyboardCursor, 48, strokeStartAnchor);
+      if (endAnchor < 0) {
+        showDrawNudge("END ON THE OTHER PIN");
+        announceStatus("Move the pen onto the other pin before finishing this line.");
+        return;
+      }
+      var endPoint = { x: anchors[endAnchor].x, y: anchors[endAnchor].y };
+      if (hypot(keyboardCursor.x, keyboardCursor.y, endPoint.x, endPoint.y) > 0.5) stroke.push(endPoint);
+      keyboardCursor = endPoint;
+    }
+    if (stroke.length < 2) {
+      strokes.pop();
+      announceStatus("The line was too short and was removed.");
+    } else {
+      announceStatus("Line finished. Press Enter to run it, or move the pen and press Space to add another line.");
+    }
+    keyboardDrawing = false;
+    strokeStartAnchor = -1;
+    updateInkHud();
+  }
+
+  function cancelKeyboardStroke() {
+    if (!keyboardDrawing) return false;
+    strokes.pop();
+    keyboardDrawing = false;
+    strokeStartAnchor = -1;
+    updateInkHud();
+    announceStatus("Active line cancelled.");
+    return true;
+  }
+
+  function moveKeyboardCursor(dx, dy) {
+    var candidate = {
+      x: clamp(keyboardCursor.x + dx, 0, DESIGN_W),
+      y: clamp(keyboardCursor.y + dy, 0, DESIGN_H)
+    };
+    if (!keyboardDrawing) {
+      keyboardCursor = candidate;
+      requestFrame();
+      return;
+    }
+    var issue = pointIssue(candidate);
+    if (issue) {
+      nudgePointIssue(issue);
+      announceStatus(issue === "no-draw" ? "Cannot draw through the red no-ink area." : "Cannot draw outside the green area.");
+      return;
+    }
+    var stroke = strokes[strokes.length - 1];
+    var last = stroke[stroke.length - 1];
+    var distance = hypot(last.x, last.y, candidate.x, candidate.y);
+    var remaining = inkMax() - totalInk();
+    if (distance > remaining) {
+      if (remaining > 0.8) {
+        var portion = remaining / distance;
+        candidate = {
+          x: last.x + (candidate.x - last.x) * portion,
+          y: last.y + (candidate.y - last.y) * portion
+        };
+        stroke.push(candidate);
+      }
+      keyboardCursor = candidate;
+      keyboardDrawing = false;
+      showDrawNudge("OUT OF INK · tap GO or reset");
+      announceStatus("No ink remains. Press Enter to run the line or reset it.");
+      updateInkHud();
+      return;
+    }
+    if (distance >= 2.4) stroke.push(candidate);
+    keyboardCursor = candidate;
+    updateInkHud();
+  }
+
+  function onCanvasKeyDown(e) {
+    if (state !== STATE_DRAW) return;
+    lastInputMethod = "keyboard";
+    var step = e.shiftKey ? 24 : 8;
+    var handled = true;
+    if (e.key === "ArrowLeft") moveKeyboardCursor(-step, 0);
+    else if (e.key === "ArrowRight") moveKeyboardCursor(step, 0);
+    else if (e.key === "ArrowUp") moveKeyboardCursor(0, -step);
+    else if (e.key === "ArrowDown") moveKeyboardCursor(0, step);
+    else if (e.key === " ") {
+      if (keyboardDrawing) finishKeyboardStroke();
+      else startKeyboardStroke();
+    } else if (e.key === "Escape") {
+      handled = cancelKeyboardStroke();
+    } else if (e.key === "Enter") {
+      if (keyboardDrawing) finishKeyboardStroke();
+      if (!keyboardDrawing && strokes.length) go();
+    } else {
+      handled = false;
+    }
+    if (handled) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+  }
+
   function bindDraw() {
     canvas.addEventListener("mousedown", onPointerDown);
     window.addEventListener("mousemove", onPointerMove);
@@ -871,6 +905,12 @@
     window.addEventListener("touchmove", onPointerMove, { passive: false });
     window.addEventListener("touchend", onPointerUp, { passive: false });
     window.addEventListener("touchcancel", onPointerUp, { passive: false });
+    canvas.addEventListener("keydown", onCanvasKeyDown);
+    canvas.addEventListener("focus", function () {
+      announceStatus("Keyboard drawing ready. Use arrow keys to move the pen and Space to start or finish a line.");
+      requestFrame();
+    });
+    canvas.addEventListener("blur", requestFrame);
     canvas.addEventListener("contextmenu", function (e) { e.preventDefault(); });
   }
 
@@ -1239,7 +1279,7 @@
       var fallSpeed = cart.chassis.velocity.y;
       if (flightVoiceStage === 0 && airborneMs > 260 && fallSpeed > 4.8) {
         flightVoiceStage = 1;
-        SOUND.say("weee", clamp(fallSpeed / 14, 0.35, 1));
+        SOUND.say("joy", clamp(fallSpeed / 14, 0.35, 1));
       }
       if (flightVoiceStage < 2 && airborneMs > 680 && fallSpeed > 12.5) {
         flightVoiceStage = 2;
@@ -1672,6 +1712,10 @@
   }
 
   function startFinishAnim(won) {
+    if (reduceMotion) {
+      stopFinishAnim();
+      return;
+    }
     var pick = won ? pickWinAnim() : pickFailAnim(crashReason);
     finishAnim.active = true;
     finishAnim.win = won;
@@ -1703,7 +1747,7 @@
     if (ended) return;
     ended = true;
     state = won ? STATE_WIN : STATE_FAIL;
-    if (!won) shake = 16;
+    if (!won && !reduceMotion) shake = 16;
     SOUND.setMode("result");
     SOUND.play(won ? "win" : "fail", 0.9);
     if (el.btnGo) el.btnGo.disabled = true;
@@ -1722,6 +1766,20 @@
       }
     }
     publishResult(won);
+    TELEMETRY.track("run_finished", {
+      yard: level ? level.id : "none",
+      outcome: won ? "win" : "fail",
+      reason: won ? "clear" : (crashReason || "wipeout"),
+      attempt: attempts,
+      durationMs: Math.round(timeMs),
+      inkPercent: Math.round(clamp(totalInk() / inkMax(), 0, 1) * 100),
+      stars: starGot ? 1 : 0,
+      checkpoints: checkpointHits.filter(function (hit) { return hit; }).length,
+      input: lastInputMethod
+    });
+    if (won && levelIndex + 1 === LEVELS.length) {
+      TELEMETRY.track("campaign_completed", { yard: level.id, attempt: attempts, input: lastInputMethod });
+    }
     if (document.body) {
       document.body.dataset.lastResult = won ? "win" : (crashReason || "fail");
       document.body.dataset.lastAirMs = String(Math.round(Math.max(longestAirMs, airborneMs)));
@@ -1730,6 +1788,7 @@
       document.body.dataset.lastCheckpoints = String(checkpointHits.filter(function (hit) { return hit; }).length);
     }
     startFinishAnim(won);
+    announceStatus(won ? "Yard cleared." : "Attempt failed: " + (crashReason || "wipeout") + ".");
     resultShown = false;
     resultTimer = 0;
   }
@@ -1771,13 +1830,58 @@
       if (hasNext) el.btnNext.classList.remove("hidden");
       else el.btnNext.classList.add("hidden");
     }
+    resultReturnFocus = document.activeElement && document.activeElement !== document.body
+      ? document.activeElement
+      : canvas;
+    setGameInert(true);
+    el.result.focus();
   }
 
   function hideResult() {
+    var wasOpen = !!(el.result && !el.result.classList.contains("hidden"));
     if (el.result) el.result.classList.add("hidden");
     resultShown = false;
     resultTimer = 0;
     if (el.btnNext) el.btnNext.classList.add("hidden");
+    if (wasOpen) {
+      setGameInert(false);
+      var focusTarget = resultReturnFocus;
+      if (!focusTarget || !focusTarget.isConnected || el.result.contains(focusTarget)) focusTarget = canvas;
+      resultReturnFocus = null;
+      window.requestAnimationFrame(function () { focusTarget.focus(); });
+    }
+  }
+
+  function setGameInert(inert) {
+    var nodes = [canvas, el.hud];
+    for (var i = 0; i < nodes.length; i++) {
+      if (!nodes[i]) continue;
+      nodes[i].inert = inert;
+      if (inert) nodes[i].setAttribute("aria-hidden", "true");
+      else nodes[i].removeAttribute("aria-hidden");
+    }
+  }
+
+  function trapResultFocus(e) {
+    if (e.key !== "Tab" || !resultShown || !el.result) return;
+    var controls = Array.prototype.slice.call(el.result.querySelectorAll("button:not(.hidden):not(:disabled)"));
+    if (!controls.length) {
+      e.preventDefault();
+      el.result.focus();
+      return;
+    }
+    var first = controls[0];
+    var last = controls[controls.length - 1];
+    if (e.shiftKey && (document.activeElement === first || document.activeElement === el.result)) {
+      e.preventDefault();
+      last.focus();
+    } else if (!e.shiftKey && document.activeElement === el.result) {
+      e.preventDefault();
+      first.focus();
+    } else if (!e.shiftKey && document.activeElement === last) {
+      e.preventDefault();
+      first.focus();
+    }
   }
 
   function snapCamera() {
@@ -1895,15 +1999,19 @@
     teardownRun();
     setupWorld();
     state = STATE_DRAW;
+    resetKeyboardCursor();
     SOUND.setMode("draw");
     snapCamera();
     hideResult();
     hideYardList();
+    hideAudioPanel();
     if (el.btnGo) el.btnGo.disabled = false;
     setHintDraw();
     updateInkHud();
     updateYardHud();
     persistLastYard();
+    TELEMETRY.track("yard_loaded", { yard: level.id, input: lastInputMethod });
+    announceStatus("Yard " + (levelIndex + 1) + ", " + level.name + ". " + level.objective + ". Draw a line and press Enter or choose Go.");
   }
 
   function resetToDraw(clearLine) {
@@ -1914,13 +2022,16 @@
     strokeInvalid = false;
     strokeStartAnchor = -1;
     state = STATE_DRAW;
+    resetKeyboardCursor();
     SOUND.setMode("draw");
     snapCamera();
     hideResult();
     hideYardList();
+    hideAudioPanel();
     if (el.btnGo) el.btnGo.disabled = false;
     setHintDraw();
     updateInkHud();
+    announceStatus(clearLine ? "Line reset. Draw a new path to the flag." : "Ready to try the current line again.");
   }
 
   function go() {
@@ -1931,10 +2042,17 @@
     window.setTimeout(updateAudioDebug, 80);
     hideResult();
     hideYardList();
+    hideAudioPanel();
     teardownRun();
     buildTrack();
     spawnCart();
     attempts += 1;
+    TELEMETRY.track("run_started", {
+      yard: level ? level.id : "none",
+      attempt: attempts,
+      inkPercent: Math.round(clamp(totalInk() / inkMax(), 0, 1) * 100),
+      input: lastInputMethod
+    });
     if (el.attemptChip) el.attemptChip.textContent = "try " + attempts;
     runStart = performance.now();
     timeMs = 0;
@@ -1942,6 +2060,8 @@
     ended = false;
     if (el.btnGo) el.btnGo.disabled = true;
     if (el.hint) el.hint.textContent = "hang on";
+    announceStatus("The rider is moving. Hang on.");
+    requestFrame();
   }
 
   function goNextYard() {
@@ -2142,12 +2262,15 @@
   }
 
   function drawRuleLabel(c, box, text, color) {
-    if (!box || box.w < 78 || box.h < 42) return;
-    var x = box.x + 12;
-    var y = box.y + 28;
+    if (!box || box.w <= 0 || box.h <= 0) return;
     c.save();
     c.setLineDash([]);
     c.font = "800 17px Segoe Print, Comic Sans MS, cursive";
+    var textWidth = c.measureText(text).width;
+    var small = box.w < textWidth + 22 || box.h < 42;
+    var x = small ? box.x + box.w + 9 : box.x + 12;
+    if (x + textWidth > DESIGN_W - 8) x = Math.max(8, box.x - textWidth - 9);
+    var y = small ? box.y + Math.max(18, Math.min(box.h * 0.5 + 6, box.h - 4)) : box.y + 28;
     c.textAlign = "left";
     c.textBaseline = "alphabetic";
     c.lineJoin = "round";
@@ -2313,6 +2436,26 @@
       c.lineTo(pts[j].x, pts[j].y);
       c.stroke();
     }
+    c.restore();
+  }
+
+  function drawKeyboardCursor(c) {
+    if (state !== STATE_DRAW || document.activeElement !== canvas) return;
+    c.save();
+    c.translate(keyboardCursor.x, keyboardCursor.y);
+    c.fillStyle = keyboardDrawing ? "#d4542a" : "#fff8ee";
+    c.strokeStyle = "#2a2218";
+    c.lineWidth = 3;
+    c.beginPath();
+    c.arc(0, 0, 12, 0, Math.PI * 2);
+    c.fill();
+    c.stroke();
+    c.beginPath();
+    c.moveTo(-18, 0);
+    c.lineTo(18, 0);
+    c.moveTo(0, -18);
+    c.lineTo(0, 18);
+    c.stroke();
     c.restore();
   }
 
@@ -2785,11 +2928,11 @@
 
 
   function updateCamera() {
-    var targetZ = state === STATE_RUN ? 1.1 : 1;
+    var targetZ = !reduceMotion && state === STATE_RUN ? 1.1 : 1;
     camZ += (targetZ - camZ) * 0.08;
     var tx = DESIGN_W * 0.5;
     var ty = DESIGN_H * 0.5;
-    if (cart && state === STATE_RUN) {
+    if (!reduceMotion && cart && state === STATE_RUN) {
       tx = cart.chassis.position.x + 24;
       ty = cart.chassis.position.y - 40;
       var halfW = (DESIGN_W * 0.5) / camZ;
@@ -2803,16 +2946,60 @@
   }
 
   function render() {
+    renderCount += 1;
     var dpr = view.dpr;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, view.cssW, view.cssH);
-    ctx.fillStyle = "#1c1814";
+    ctx.fillStyle = "#30251c";
     ctx.fillRect(0, 0, view.cssW, view.cssH);
+    if (view.ox > 70) {
+      ctx.strokeStyle = "rgba(231,220,198,0.09)";
+      ctx.lineWidth = 2;
+      for (var boardX = 28; boardX < view.cssW; boardX += 76) {
+        ctx.beginPath();
+        ctx.moveTo(boardX, 0);
+        ctx.lineTo(boardX + 9, view.cssH);
+        ctx.stroke();
+      }
+      ctx.save();
+      ctx.fillStyle = "rgba(244,239,226,0.48)";
+      ctx.font = "800 13px system-ui, sans-serif";
+      ctx.letterSpacing = "0.16em";
+      ctx.textAlign = "center";
+      ctx.translate(view.ox * 0.5, view.cssH * 0.5);
+      ctx.rotate(-Math.PI * 0.5);
+      ctx.fillText("KNOCK ON WOOD · BACKYARD ARCADE", 0, 0);
+      ctx.restore();
+      ctx.save();
+      ctx.fillStyle = "rgba(244,239,226,0.48)";
+      ctx.font = "800 13px system-ui, sans-serif";
+      ctx.textAlign = "center";
+      ctx.translate(view.cssW - view.ox * 0.5, view.cssH * 0.5);
+      ctx.rotate(Math.PI * 0.5);
+      ctx.fillText("DRAW · DROP · RIDE · REPEAT", 0, 0);
+      ctx.restore();
+    } else if (view.oy > 34) {
+      ctx.strokeStyle = "rgba(231,220,198,0.09)";
+      ctx.lineWidth = 2;
+      for (var boardY = 24; boardY < view.cssH; boardY += 58) {
+        ctx.beginPath();
+        ctx.moveTo(0, boardY);
+        ctx.lineTo(view.cssW, boardY + 4);
+        ctx.stroke();
+      }
+      ctx.save();
+      ctx.fillStyle = "rgba(244,239,226,0.48)";
+      ctx.font = "800 10px system-ui, sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText("KNOCK ON WOOD · BACKYARD ARCADE", view.cssW * 0.5, view.oy * 0.5 + 4);
+      ctx.fillText("DRAW · DROP · RIDE · REPEAT", view.cssW * 0.5, view.cssH - view.oy * 0.5 + 4);
+      ctx.restore();
+    }
 
     ctx.translate(view.ox, view.oy);
     ctx.scale(view.scale, view.scale);
 
-    if (shake > 0.35) {
+    if (!reduceMotion && shake > 0.35) {
       ctx.translate((Math.random() - 0.5) * shake, (Math.random() - 0.5) * shake);
     }
 
@@ -2820,10 +3007,7 @@
     ctx.scale(camZ, camZ);
     ctx.translate(-camX, -camY);
 
-    drawPaper(ctx);
-    drawSun(ctx);
-    drawWindFields(ctx);
-    drawPlatforms(ctx);
+    drawStaticScene(ctx);
     drawRuleZones(ctx);
     drawHint(ctx);
     drawCheckpoints(ctx);
@@ -2831,6 +3015,7 @@
     drawStar(ctx);
 
     for (var i = 0; i < strokes.length; i++) drawMarkerStroke(ctx, strokes[i]);
+    drawKeyboardCursor(ctx);
 
     drawCart(ctx);
     drawPops(ctx);
@@ -2843,8 +3028,36 @@
     ctx.strokeRect(3, 3, DESIGN_W - 6, DESIGN_H - 6);
   }
 
+  function drawStaticScene(target) {
+    if (!staticLayer) {
+      staticLayer = document.createElement("canvas");
+      staticLayer.width = DESIGN_W;
+      staticLayer.height = DESIGN_H;
+    }
+    var levelId = level ? level.id : "empty";
+    if (staticLayerLevel !== levelId) {
+      var layer = staticLayer.getContext("2d");
+      layer.clearRect(0, 0, DESIGN_W, DESIGN_H);
+      drawPaper(layer);
+      drawSun(layer);
+      drawWindFields(layer);
+      drawPlatforms(layer);
+      staticLayerLevel = levelId;
+    }
+    target.drawImage(staticLayer, 0, 0);
+  }
+
+  function requestFrame() {
+    if (!frameId && pageVisible) frameId = window.requestAnimationFrame(loop);
+  }
+
+  function needsContinuousFrame() {
+    return state === STATE_RUN || finishAnim.active || shake > 0.4 || pops.length > 0 || (ended && !resultShown);
+  }
+
   function loop(ts) {
-    requestAnimationFrame(loop);
+    frameId = 0;
+    if (!pageVisible) return;
     if (!lastTs) lastTs = ts;
     var dt = ts - lastTs;
     if (dt > 32) dt = 32;
@@ -2870,19 +3083,21 @@
 
     if (finishAnim.active) {
       finishAnim.t += dt;
-      if (finishAnim.t > finishAnim.dur + 200) finishAnim.t = finishAnim.dur + 200;
+      if (finishAnim.t > finishAnim.dur + 200) stopFinishAnim();
     }
 
     if (ended && !resultShown) {
       resultTimer += dt;
-      if (resultTimer >= RESULT_DELAY_MS) showResult(state === STATE_WIN);
+      if (resultTimer >= (reduceMotion ? 160 : RESULT_DELAY_MS)) showResult(state === STATE_WIN);
     }
 
-    if (shake > 0.4) shake *= 0.86;
+    if (reduceMotion) shake = 0;
+    else if (shake > 0.4) shake *= 0.86;
     else shake = 0;
     tickPops(dt);
     updateCamera();
     render();
+    if (needsContinuousFrame()) requestFrame();
   }
 
   function canRetryNow() {
@@ -2922,10 +3137,53 @@
     if (el.soundToggle) {
       el.soundToggle.addEventListener("click", function (e) {
         e.preventDefault();
-        toggleSound();
+        toggleAudioPanel();
+      });
+    }
+    if (el.masterAudioToggle) el.masterAudioToggle.addEventListener("click", toggleSound);
+    if (el.musicToggle) el.musicToggle.addEventListener("click", function () { toggleAudioCategory("music"); });
+    if (el.effectsToggle) el.effectsToggle.addEventListener("click", function () { toggleAudioCategory("sfx"); });
+    if (el.voicesToggle) el.voicesToggle.addEventListener("click", function () { toggleAudioCategory("voices"); });
+    if (el.audioDone) el.audioDone.addEventListener("click", function () {
+      hideAudioPanel();
+      el.soundToggle.focus();
+    });
+    if (el.audioPanel) {
+      el.audioPanel.addEventListener("keydown", function (e) {
+        if (e.key !== "Escape") return;
+        e.preventDefault();
+        e.stopPropagation();
+        hideAudioPanel();
+        el.soundToggle.focus();
+      });
+    }
+    if (el.btnReload) {
+      el.btnReload.addEventListener("click", function () { window.location.reload(); });
+    }
+    if (el.result) el.result.addEventListener("keydown", trapResultFocus);
+    if (el.yardList) {
+      el.yardList.addEventListener("keydown", function (e) {
+        var items = Array.prototype.slice.call(el.yardList.querySelectorAll("button:not(:disabled)"));
+        var index = items.indexOf(document.activeElement);
+        if (e.key === "Escape") {
+          e.preventDefault();
+          hideYardList();
+          el.yardChip.focus();
+          return;
+        }
+        if (!items.length) return;
+        if (e.key === "ArrowDown") index = (index + 1 + items.length) % items.length;
+        else if (e.key === "ArrowUp") index = (index - 1 + items.length) % items.length;
+        else if (e.key === "Home") index = 0;
+        else if (e.key === "End") index = items.length - 1;
+        else return;
+        e.preventDefault();
+        items[index].focus();
       });
     }
     window.addEventListener("keydown", function (e) {
+      if (e.defaultPrevented) return;
+      if (e.target && /^(BUTTON|A|INPUT|SELECT|TEXTAREA)$/.test(e.target.tagName) && e.key !== "Escape") return;
       if (e.key === "g" || e.key === "G" || e.key === "Enter") {
         if (state === STATE_DRAW) go();
       } else if (e.key === "r" || e.key === "R") {
@@ -2936,13 +3194,29 @@
       } else if (e.key === "n" || e.key === "N") {
         if (canRetryNow() && state === STATE_WIN && levelIndex + 1 < LEVELS.length) goNextYard();
       } else if (e.key === "Escape") {
+        var yardWasOpen = el.yardList && !el.yardList.classList.contains("hidden");
+        var audioWasOpen = el.audioPanel && !el.audioPanel.classList.contains("hidden");
         hideYardList();
+        hideAudioPanel();
+        if (yardWasOpen && el.yardChip) el.yardChip.focus();
+        else if (audioWasOpen && el.soundToggle) el.soundToggle.focus();
       } else if (e.key === "m" || e.key === "M") {
         toggleSound();
       }
     });
     document.addEventListener("visibilitychange", function () {
-      SOUND.setVisible(!document.hidden);
+      pageVisible = !document.hidden;
+      SOUND.setVisible(pageVisible);
+      if (!pageVisible) {
+        hiddenAt = performance.now();
+        if (frameId) window.cancelAnimationFrame(frameId);
+        frameId = 0;
+      } else {
+        if (hiddenAt && state === STATE_RUN) runStart += performance.now() - hiddenAt;
+        hiddenAt = 0;
+        lastTs = 0;
+        requestFrame();
+      }
     });
   }
 
@@ -2955,12 +3229,19 @@
     el.btnResetLine = document.getElementById("btnResetLine");
     el.btnNext = document.getElementById("btnNext");
     el.inkLabel = document.getElementById("inkLabel");
+    el.inkTrack = document.getElementById("inkTrack");
     el.inkFill = document.getElementById("inkFill");
     el.inkPct = document.getElementById("inkPct");
     el.hint = document.getElementById("hint");
     el.attemptChip = document.getElementById("attemptChip");
     el.yardChip = document.getElementById("yardChip");
     el.soundToggle = document.getElementById("soundToggle");
+    el.audioPanel = document.getElementById("audioPanel");
+    el.masterAudioToggle = document.getElementById("masterAudioToggle");
+    el.musicToggle = document.getElementById("musicToggle");
+    el.effectsToggle = document.getElementById("effectsToggle");
+    el.voicesToggle = document.getElementById("voicesToggle");
+    el.audioDone = document.getElementById("audioDone");
     el.yardList = document.getElementById("yardList");
     el.result = document.getElementById("result");
     el.resultTitle = document.getElementById("resultTitle");
@@ -2970,6 +3251,8 @@
     el.statInk = document.getElementById("statInk");
     el.statScore = document.getElementById("statScore");
     el.bootError = document.getElementById("bootError");
+    el.btnReload = document.getElementById("btnReload");
+    el.gameStatus = document.getElementById("gameStatus");
     el.hud = document.getElementById("hud");
   }
 
@@ -2992,7 +3275,25 @@
       return;
     }
     canvas.style.touchAction = "none";
-    reduceMotion = !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+    motionQuery = window.matchMedia ? window.matchMedia("(prefers-reduced-motion: reduce)") : null;
+    reduceMotion = !!(motionQuery && motionQuery.matches);
+    if (motionQuery) {
+      var onMotionPreference = function (event) {
+        reduceMotion = !!event.matches;
+        if (document.body) document.body.dataset.reducedMotion = reduceMotion ? "true" : "false";
+        if (reduceMotion) {
+          shake = 0;
+          stopFinishAnim();
+          snapCamera();
+        }
+        requestFrame();
+      };
+      if (motionQuery.addEventListener) motionQuery.addEventListener("change", onMotionPreference);
+      else if (motionQuery.addListener) motionQuery.addListener(onMotionPreference);
+    }
+    if (document.body) document.body.dataset.reducedMotion = reduceMotion ? "true" : "false";
+    migrateStorage();
+    SOUND.setSettings(loadAudioSettings());
     SOUND.setMuted(storageGet(STORAGE_MUTED, "0") === "1");
     updateSoundHud();
     seedPaper();
@@ -3002,16 +3303,25 @@
     var params = devMode ? new URLSearchParams(window.location.search) : null;
     if (devMode) {
       window.__RML_AUDIO = SOUND;
+      window.__RML_DEBUG = {
+        renderCount: function () { return renderCount; },
+        state: function () { return state; },
+        backingPixels: function () { return canvas.width * canvas.height; },
+        reducedMotion: function () { return reduceMotion; }
+      };
       unlockedCount = LEVELS.length;
       var requestedYard = parseInt(params.get("yard"), 10);
       if (requestedYard) startIdx = clamp(requestedYard - 1, 0, LEVELS.length - 1);
     }
     loadLevel(startIdx, { clearLine: true });
+    TELEMETRY.track("game_loaded", { yard: level ? level.id : "none", input: lastInputMethod });
+    if (document.body) document.body.dataset.storage = storageAvailable ? "available" : "unavailable";
+    if (!storageAvailable) announceStatus("Progress cannot be saved in this browser session. The game is still playable.");
     if (devMode && params.get("autoplay") === "1") loadDevReference(params.get("pattern"));
     bindDraw();
     bindHud();
     updateInkHud();
-    requestAnimationFrame(loop);
+    requestFrame();
     if (devMode && params.get("autoplay") === "1" && strokes.length) {
       window.setTimeout(go, 180);
     }

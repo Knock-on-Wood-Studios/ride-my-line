@@ -1,0 +1,69 @@
+{
+  "schemaVersion": 1,
+  "assets": [
+    {
+      "files": ["ride-my-line-backyard-loop.mp3"],
+      "title": "Ride My Line Backyard Loop",
+      "source": "OpenMusic",
+      "license": "Commercial license",
+      "licenseRecord": "Issued to Robert Wood on 2026-08-25"
+    },
+    {
+      "files": [
+        "sfx/go-click.ogg",
+        "sfx/confirmation.ogg",
+        "sfx/star-pluck.ogg",
+        "sfx/fail.ogg",
+        "sfx/toggle.ogg",
+        "sfx/ice-scrape.ogg",
+        "sfx/wind.ogg",
+        "sfx/rubber-drop.ogg"
+      ],
+      "title": "Interface Sounds",
+      "creator": "Kenney",
+      "sourceUrl": "https://kenney.nl/assets/interface-sounds",
+      "license": "CC0-1.0",
+      "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/"
+    },
+    {
+      "files": [
+        "sfx/wood-light.ogg",
+        "sfx/wood-medium.ogg",
+        "sfx/wood-heavy.ogg",
+        "sfx/soft-impact.ogg",
+        "sfx/wheel-clack.ogg"
+      ],
+      "title": "Impact Sounds",
+      "creator": "Kenney",
+      "sourceUrl": "https://kenney.nl/assets/impact-sounds",
+      "license": "CC0-1.0",
+      "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/"
+    },
+    {
+      "files": ["sfx/pencil.ogg"],
+      "title": "Pencil Sounds",
+      "creator": "AntumDeluge",
+      "sourceUrl": "https://opengameart.org/content/pencil-sounds",
+      "license": "CC0-1.0",
+      "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/"
+    },
+    {
+      "files": ["sfx/rider-woohoo.ogg"],
+      "title": "Woohoo! Female Voice Over",
+      "creator": "JeanMyna_VA",
+      "sourceUrl": "https://opengameart.org/content/woohoo-female-voice-over-vocal-sound-for-character",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "modifications": "File renamed; playback gain and rate are adjusted at runtime."
+    },
+    {
+      "files": ["sfx/rider-shriek-1.wav", "sfx/rider-shriek-2.wav"],
+      "title": "Female high-pitched scream SFX",
+      "creator": "WuxiaScrub",
+      "sourceUrl": "https://opengameart.org/content/female-high-pitched-scream-sfx",
+      "license": "CC0-1.0",
+      "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "modifications": "Two performances were trimmed from screams.ogg and given short fade-outs."
+    }
+  ]
+}

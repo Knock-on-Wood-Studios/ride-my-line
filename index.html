@@ -2,14 +2,40 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#f4efe2" />
+  <meta name="build-version" content="dev" />
+  <meta name="description" content="Draw a track, drop the wagon, and ride your line through twelve escalating physics yards." />
+  <meta name="application-name" content="Ride My Line" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="Ride My Line" />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Ride My Line" />
+  <meta property="og:description" content="Draw it. Drop it. Ride it. Twelve escalating physics yards from Knock on Wood Studios." />
+  <meta property="og:image" content="/assets/brand/ride-my-line-share.png" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Ride My Line" />
+  <meta name="twitter:description" content="Draw it. Drop it. Ride it. Twelve escalating physics yards from Knock on Wood Studios." />
+  <meta name="twitter:image" content="/assets/brand/ride-my-line-share.png" />
   <title>Ride My Line</title>
+  <link rel="icon" href="assets/brand/ride-my-line-icon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="assets/brand/apple-touch-icon.png" />
+  <link rel="manifest" href="manifest.webmanifest" />
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body data-music="assets/audio/ride-my-line-backyard-loop.mp3">
   <div id="app">
-    <canvas id="game" style="touch-action:none"></canvas>
+    <canvas
+      id="game"
+      tabindex="0"
+      role="application"
+      aria-roledescription="line-drawing physics game"
+      aria-label="Ride My Line game canvas"
+      aria-describedby="gameInstructions gameStatus"
+    >Draw a track that carries the rider from the starting ledge to the finish flag.</canvas>
+    <p id="gameInstructions" class="sr-only">Pointer: draw a line, then choose Go. Keyboard: focus the game, use arrow keys to move the pen, hold Shift for larger steps, press Space to start or finish a line, Escape to cancel the active line, and Enter to run it.</p>
+    <p id="gameStatus" class="sr-only" aria-live="polite" aria-atomic="true">Game loading.</p>
 
     <div id="hud" class="hud">
       <header class="topbar">
@@ -18,19 +44,32 @@
           <p class="hint" id="hint" aria-live="polite">DRAW THE CATCH · reach the flag</p>
         </div>
         <div class="meta">
-          <button type="button" id="yardChip" class="chip chip-btn" aria-expanded="false" aria-controls="yardList">yard 1/12</button>
+          <button type="button" id="yardChip" class="chip chip-btn" aria-haspopup="true" aria-expanded="false" aria-controls="yardList">yard 1/12</button>
           <div class="meta-row">
             <span id="attemptChip" class="chip">try 1</span>
-            <button type="button" id="soundToggle" class="chip chip-btn sound-chip" aria-pressed="true" aria-label="Mute sound">SOUND ON</button>
+            <button type="button" id="soundToggle" class="chip chip-btn sound-chip" aria-expanded="false" aria-controls="audioPanel" aria-label="Sound settings">SOUND ON</button>
           </div>
         </div>
       </header>
 
-      <div id="yardList" class="yard-list hidden" role="listbox" aria-label="Yards"></div>
+      <div id="yardList" class="yard-list hidden" aria-label="Choose a yard"></div>
+      <div id="audioPanel" class="audio-panel hidden" aria-label="Sound settings">
+        <p class="audio-title">SOUND SETTINGS</p>
+        <button type="button" id="masterAudioToggle" role="switch" aria-checked="true"><span>All sound</span><strong>ON</strong></button>
+        <button type="button" id="musicToggle" role="switch" aria-checked="true"><span>Music</span><strong>ON</strong></button>
+        <button type="button" id="effectsToggle" role="switch" aria-checked="true"><span>Effects</span><strong>ON</strong></button>
+        <button type="button" id="voicesToggle" role="switch" aria-checked="true"><span>Rider reactions</span><strong>ON</strong></button>
+        <button type="button" id="audioDone" class="audio-done">DONE</button>
+        <nav class="audio-info" aria-label="Game information">
+          <a href="privacy.html" target="_blank" rel="noopener">Privacy</a>
+          <a href="terms.html" target="_blank" rel="noopener">Terms</a>
+          <a href="support.html" target="_blank" rel="noopener">Support</a>
+        </nav>
+      </div>
 
       <div class="ink-wrap">
         <span class="ink-label" id="inkLabel">INK</span>
-        <div class="ink-track" aria-hidden="true">
+        <div id="inkTrack" class="ink-track" role="progressbar" aria-labelledby="inkLabel" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100">
           <div id="inkFill" class="ink-fill"></div>
         </div>
         <span id="inkPct" class="ink-pct">100%</span>
@@ -44,7 +83,7 @@
       <p class="studio">Knock on Wood Studios</p>
     </div>
 
-    <div id="result" class="result hidden" role="dialog" aria-labelledby="resultTitle">
+    <div id="result" class="result hidden" role="dialog" aria-modal="true" aria-labelledby="resultTitle" tabindex="-1">
       <div class="result-card">
         <p id="resultKicker" class="result-kicker">yard-01</p>
         <h2 id="resultTitle">MADE IT</h2>
@@ -60,16 +99,21 @@
       </div>
     </div>
 
-    <div id="bootError" class="boot-error hidden">
+    <div id="bootError" class="boot-error hidden" role="alert" aria-live="assertive">
       <div class="result-card">
         <h2>Could not load physics</h2>
-        <p>Matter.js failed to load from the CDN. Check the network and refresh.</p>
+        <p>The local physics engine did not load. Reload the game to try again.</p>
+        <button type="button" id="btnReload" class="btn btn-ghost">RELOAD GAME</button>
       </div>
     </div>
+    <noscript><p class="noscript">Ride My Line needs JavaScript to run its physics simulation.</p></noscript>
   </div>
 
   <script src="vendor/matter.min.js"></script>
   <script src="levels.js"></script>
+  <script src="telemetry.js"></script>
+  <script src="audio.js"></script>
   <script src="game.js"></script>
+  <script src="pwa.js"></script>
 </body>
 </html>

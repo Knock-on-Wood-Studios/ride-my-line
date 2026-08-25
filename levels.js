@@ -10,6 +10,7 @@
     {
       id: "yard-01",
       name: "First Drop",
+      difficulty: 1,
       objective: "DRAW A CATCH · reach the flag",
       inkMax: 620,
       rules: {
@@ -37,6 +38,7 @@
     {
       id: "yard-02",
       name: "Green Zone",
+      difficulty: 2,
       objective: "DRAW INSIDE GREEN · reach the flag",
       inkMax: 720,
       rules: {
@@ -65,6 +67,7 @@
     {
       id: "yard-03",
       name: "Mind The Gap",
+      difficulty: 3,
       objective: "TWO LINES · AVOID THE RED X",
       inkMax: 760,
       rules: {
@@ -101,8 +104,9 @@
     {
       id: "yard-04",
       name: "Feather Catch",
+      difficulty: 5,
       objective: "CURL UNDER · no hard chassis hit",
-      inkMax: 820,
+      inkMax: 880,
       rules: {
         maxStrokes: 1,
         material: "chalk",
@@ -132,8 +136,9 @@
     {
       id: "yard-05",
       name: "Pin Curl",
+      difficulty: 6,
       objective: "PIN TO PIN · curl below the block",
-      inkMax: 600,
+      inkMax: 640,
       rules: {
         maxStrokes: 1,
         material: "chalk",
@@ -164,6 +169,7 @@
     {
       id: "yard-06",
       name: "Thread And Fly",
+      difficulty: 7,
       objective: "DOWN 1 · GAP 2 · land clean",
       inkMax: 780,
       rules: {
@@ -203,6 +209,7 @@
     {
       id: "yard-07",
       name: "Rubber Launch",
+      difficulty: 8,
       objective: "RUBBER DROP · fly through the ring",
       inkMax: 800,
       rules: {
@@ -247,6 +254,7 @@
     {
       id: "yard-08",
       name: "Ice Valley",
+      difficulty: 8,
       objective: "ICE SPEED · clear the long gap",
       inkMax: 800,
       rules: {
@@ -288,6 +296,7 @@
     {
       id: "yard-09",
       name: "Headwind Gap",
+      difficulty: 9,
       objective: "HEADWIND · launch through the gap",
       inkMax: 800,
       rules: {
@@ -325,6 +334,7 @@
     {
       id: "yard-10",
       name: "Egg Steps",
+      difficulty: 9,
       objective: "TWO SOFT CATCHES · save the eggs",
       inkMax: 760,
       rules: {
@@ -371,6 +381,7 @@
     {
       id: "yard-11",
       name: "Gravity Gate",
+      difficulty: 10,
       objective: "DIVE 1 · FLY 2 · keep momentum",
       inkMax: 820,
       rules: {
@@ -408,6 +419,7 @@
     {
       id: "yard-12",
       name: "Yard Boss",
+      difficulty: 10,
       objective: "DIVE · FLY · CATCH · PARK",
       inkMax: 1100,
       rules: {

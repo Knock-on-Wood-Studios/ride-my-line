@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Ride My Line wagon icon">
+  <rect width="512" height="512" fill="#f4efe2"/>
+  <path d="M58 350c61-108 118-103 164-49 47 54 96 42 144-57 25-51 53-80 88-86" fill="none" stroke="#2a2218" stroke-width="28" stroke-linecap="round"/>
+  <g transform="translate(205 208) rotate(-6)">
+    <path d="M0 13h131l-19 91H24z" fill="#d4542a" stroke="#2a2218" stroke-width="14" stroke-linejoin="round"/>
+    <path d="M26 12 10-37h-28" fill="none" stroke="#2a2218" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="35" cy="111" r="25" fill="#f4efe2" stroke="#2a2218" stroke-width="14"/>
+    <circle cx="103" cy="111" r="25" fill="#f4efe2" stroke="#2a2218" stroke-width="14"/>
+    <circle cx="73" cy="-25" r="20" fill="#f4efe2" stroke="#2a2218" stroke-width="12"/>
+    <path d="M74-4v45m0-25-30 26m30-21 27 25" fill="none" stroke="#2a2218" stroke-width="12" stroke-linecap="round"/>
+  </g>
+  <path d="m374 108 10 21 23 3-17 16 4 23-20-11-21 11 4-23-17-16 24-3z" fill="#d4542a" stroke="#2a2218" stroke-width="7" stroke-linejoin="round"/>
+</svg>

@@ -18,6 +18,18 @@
   padding: 0;
 }
 
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 html,
 body {
   width: 100%;
@@ -48,6 +60,11 @@ body {
   height: 100%;
   touch-action: none;
   cursor: crosshair;
+}
+
+#game:focus-visible {
+  outline: 4px solid var(--accent);
+  outline-offset: -6px;
 }
 
 .hud {
@@ -120,6 +137,10 @@ body {
 
 .chip-btn {
   pointer-events: auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
   appearance: none;
   -webkit-appearance: none;
   font: inherit;
@@ -134,8 +155,8 @@ body {
 }
 
 .sound-chip {
-  padding: 4px 7px;
-  font-size: 9px;
+  padding: 6px 9px;
+  font-size: 11px;
   letter-spacing: 0.035em;
   transform: rotate(1deg);
 }
@@ -161,11 +182,103 @@ body {
   box-shadow: 4px 5px 0 var(--shadow);
   transform: rotate(1deg);
   z-index: 4;
+  max-height: calc(100% - 116px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  -webkit-overflow-scrolling: touch;
+}
+
+.audio-panel {
+  pointer-events: auto;
+  align-self: flex-end;
+  margin-top: 8px;
+  width: min(260px, 76%);
+  background: #fff8ee;
+  border: 3px solid var(--ink);
+  border-radius: 12px 18px 10px 16px;
+  padding: 10px;
+  box-shadow: 4px 5px 0 var(--shadow);
+  transform: rotate(-0.5deg);
+  z-index: 4;
+}
+
+.audio-title {
+  padding: 4px 8px 8px;
+  color: var(--ink-soft);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+}
+
+.audio-panel button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  min-height: 44px;
+  padding: 8px;
+  appearance: none;
+  -webkit-appearance: none;
+  border: 0;
+  border-top: 1px dashed var(--ink-soft);
+  background: transparent;
+  color: var(--ink);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.2;
+  text-align: left;
+  cursor: pointer;
+}
+
+.audio-panel button strong {
+  min-width: 38px;
+  color: var(--accent-dark);
+  text-align: right;
+}
+
+.audio-panel button[aria-checked="false"] strong {
+  color: var(--ink-soft);
+}
+
+.audio-panel .audio-done {
+  justify-content: center;
+  margin-top: 4px;
+  border: 2px solid var(--ink);
+  border-radius: 10px;
+  background: var(--paper-deep);
+  text-align: center;
+}
+
+.audio-info {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  margin-top: 5px;
+  border-top: 1px dashed var(--ink-soft);
+}
+
+.audio-info a {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  color: var(--ink-soft);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-underline-offset: 3px;
+}
+
+.audio-info a:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: -2px;
 }
 
 .yard-list button {
   display: block;
   width: 100%;
+  min-height: 44px;
   text-align: left;
   appearance: none;
   -webkit-appearance: none;
@@ -192,6 +305,20 @@ body {
   color: var(--ink-soft);
   opacity: 0.45;
   cursor: default;
+}
+
+.yard-list .yard-reset {
+  margin-top: 7px;
+  border-top: 1px dashed var(--ink-soft);
+  border-radius: 0 0 8px 8px;
+  color: var(--accent-dark);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-align: center;
+}
+
+.yard-list .yard-reset:hover {
+  background: #f7d3c4;
 }
 
 .ink-wrap {
@@ -284,7 +411,8 @@ body {
 
 .btn:focus-visible,
 .chip-btn:focus-visible,
-.yard-list button:focus-visible {
+.yard-list button:focus-visible,
+.audio-panel button:focus-visible {
   outline: 3px solid var(--accent);
   outline-offset: 3px;
 }
@@ -447,6 +575,23 @@ body {
   color: var(--ink-soft);
 }
 
+.boot-error .btn {
+  margin-top: 18px;
+}
+
+.noscript {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: var(--paper);
+  color: var(--ink);
+  font: 700 18px/1.45 system-ui, sans-serif;
+  text-align: center;
+}
+
 @media (min-width: 900px) and (min-height: 900px) {
   .hud {
     padding: 22px 28px 16px;
@@ -462,5 +607,19 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .ink-fill {
     transition: none;
+  }
+}
+
+@media (forced-colors: active) {
+  #game:focus-visible,
+  .btn:focus-visible,
+  .chip-btn:focus-visible,
+  .yard-list button:focus-visible {
+    outline-color: Highlight;
+  }
+
+  .ink-fill,
+  .ink-fill.low {
+    background: CanvasText;
   }
 }

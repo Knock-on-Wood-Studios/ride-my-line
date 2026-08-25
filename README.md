@@ -1,6 +1,6 @@
 # Ride My Line
 
-Knock on Wood Studios prototype.
+A production-ready browser physics game from Knock on Wood Studios.
 
 Draw a catch. A junk wagon drops off a high ledge. Gravity spends the speed. Miss, curse, redraw in five seconds.
 
@@ -27,19 +27,27 @@ Install dependencies with `npm ci`, then run `npm run dev`. The production build
 
 Use `npm run check` for level validation, unit tests, syntax checks, and a production build. Use `npm run test:e2e` for the 12-yard authored-solution suite and the repeated-swoop regression.
 
-Every level is checked for ordered IDs, supported mechanics, valid geometry, legal reference strokes, checkpoint directions, and ink-budget feasibility before a build can complete. GitHub Actions runs the same gates on every pull request and push to `main`.
+Every level is checked for ordered IDs, supported mechanics, valid geometry and ranges, complete reference segments, anchors, checkpoint directions, differentiating mechanics, difficulty progression, ink-budget feasibility, and craft-medal feasibility before a build can complete. `npm run report:levels` prints the campaign’s difficulty and mechanic matrix.
+
+The browser gate runs the entire campaign and the one-move regression in mobile and desktop Chromium, desktop Firefox, and mobile WebKit. GitHub Actions runs the same gates on every pull request and push to `main`.
 
 ## Audio
 
-Sound unlocks on the first draw or GO interaction and can be muted from the HUD. The current build uses a licensed 24-second OpenMusic loop, procedural material effects, and local system speech for rider reactions, with synthesized music and yelps as fallbacks.
+Sound unlocks on the first draw or GO interaction. The HUD keeps a single compact sound control, with separate settings for music, effects, and rider reactions. The current build uses a licensed 24-second OpenMusic loop plus recorded game-audio assets for pencil, wheel, impact, surface, UI, and human rider reactions. It does not synthesize sound effects or voices.
 
-The music lives at `assets/audio/ride-my-line-backyard-loop.mp3`; its OpenMusic commercial license was issued to Robert Wood on August 25, 2026. The audio director loops it, ducks it under rider reactions, and pauses it when the page is hidden. If the file cannot load, the game automatically falls back to its lightweight Web Audio score.
+The music lives at `assets/audio/ride-my-line-backyard-loop.mp3`; its OpenMusic commercial license was issued to Robert Wood on August 25, 2026. The audio director loops it, ducks it under rider reactions, and pauses it when the page is hidden. Asset provenance and attribution are recorded in `assets/audio/LICENSES.json` and `THIRD_PARTY_NOTICES.md`.
+
+## Production
+
+The build produces content-hashed executable assets, a strict same-origin security policy, a complete offline cache, install metadata and icons, user-facing privacy/terms/support pages, a health endpoint, and privacy-conscious aggregate difficulty telemetry backed by Cloudflare Analytics Engine. Product telemetry has no cookie, account, session ID, device ID, referrer, browsing history, or arbitrary text, and honors Global Privacy Control and Do Not Track.
+
+Release, rollback, monitoring, playtest, and level-expansion procedures live in `docs/`. See `PRIVACY.md`, `SECURITY.md`, `SUPPORT.md`, `LICENSE.md`, and `THIRD_PARTY_NOTICES.md` for the project policies.
 
 
-## What this proto is testing
+## Core loop
 
 Drop-in start. Draw a catch, fail funny, redraw immediately. Twelve yards, no campaign chrome. Almost no tutorial.
 
-## Out of scope
+## Intentionally out of scope for this release
 
 Economy, login, share URLs, ragdoll rider, liquid player, accounts, ads, shop.

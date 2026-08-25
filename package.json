@@ -2,16 +2,18 @@
   "name": "ride-my-line",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "engines": {
     "node": ">=20"
   },
   "scripts": {
     "validate": "node scripts/validate-levels.mjs",
+    "report:levels": "node scripts/report-levels.mjs",
     "test:unit": "node --test tests/unit/*.test.mjs",
     "test:e2e": "playwright test",
     "test": "npm run test:unit && npm run build && npm run test:e2e",
-    "check": "node --check game.js && node --check levels.js && npm run validate && npm run test:unit && npm run build",
-    "build": "npm run validate && node scripts/build.mjs",
+    "check": "node --check game.js && node --check audio.js && node --check telemetry.js && node --check pwa.js && node --check worker.js && node --check levels.js && npm run validate && npm run test:unit && npm run build",
+    "build": "npm run validate && node scripts/build.mjs && node scripts/verify-build.mjs",
     "preview:test": "node scripts/serve.mjs dist 8765",
     "dev": "npm run build && wrangler dev",
     "deploy": "npm run build && wrangler deploy"
