@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.2.0 — 2026-09-01
+
+- Recast the entire gameplay mix as playful backyard slapstick with four short recorded rider reactions, spring and toy Foley, and pizzicato ring, star, win, and fail cues.
+- Replaced the long scream stack with a comic falling yelp, a quick landing “oof,” controlled joy/victory variation, and deliberate voice interruption so reactions never pile up.
+- Added per-event cooldowns, polyphony caps, sample-grain pencil texture, restrained wind overlap, and speed-aware wheel timing to keep repeated play lively without becoming noisy.
+- Rebalanced music ducking, effects, voices, impacts, ice, rubber, and result cues around the existing licensed OpenMusic loop.
+- Expanded automated audio coverage to verify the playful mix profile, every shipped recording’s provenance, decoder health, and runtime voice caps.
+
 ## 1.1.0 — 2026-08-25
 
 - Expanded the launch campaign from 12 to 25 authored yards without adding new player controls.

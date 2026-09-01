@@ -705,7 +705,7 @@
     strokeInvalid = false;
     strokes.push([p]);
     SOUND.play("pencil", 0.36);
-    pencilSoundMs = 48;
+    pencilSoundMs = 72;
     updateInkHud();
   }
 
@@ -741,7 +741,7 @@
     stroke.push(p);
     if (pencilSoundMs <= 0) {
       SOUND.play("pencil", clamp(d / 18, 0.25, 0.9));
-      pencilSoundMs = 42;
+      pencilSoundMs = 70;
     }
     updateInkHud();
   }
@@ -1292,19 +1292,19 @@
       rollSoundMs -= dt;
       if (cart.chassis.speed > 2.4 && rollSoundMs <= 0) {
         SOUND.play("roll", clamp(cart.chassis.speed / 12, 0.25, 0.85));
-        rollSoundMs = 118;
+        rollSoundMs = clamp(205 - cart.chassis.speed * 4, 128, 188);
       }
     } else {
       airborneMs += dt;
       longestAirMs = Math.max(longestAirMs, airborneMs);
       var fallSpeed = cart.chassis.velocity.y;
-      if (flightVoiceStage === 0 && airborneMs > 260 && fallSpeed > 4.8) {
+      if (flightVoiceStage === 0 && airborneMs > 320 && fallSpeed > 5.2) {
         flightVoiceStage = 1;
         SOUND.say("joy", clamp(fallSpeed / 14, 0.35, 1));
       }
-      if (flightVoiceStage < 2 && airborneMs > 680 && fallSpeed > 12.5) {
+      if (flightVoiceStage < 2 && airborneMs > 820 && fallSpeed > 13.5) {
         flightVoiceStage = 2;
-        SOUND.say("shriek", clamp(fallSpeed / 18, 0.55, 1));
+        SOUND.say("panic", clamp(fallSpeed / 18, 0.55, 1));
       }
     }
 
@@ -1312,7 +1312,7 @@
     windSoundMs -= dt;
     if (windActiveMs > 0 && windSoundMs <= 0) {
       SOUND.play("wind", clamp(cart.chassis.speed / 11, 0.3, 0.8));
-      windSoundMs = 280;
+      windSoundMs = 740;
     }
   }
 
@@ -1491,7 +1491,7 @@
         markGrounded(pair);
         var impact = pairImpactSpeed(pair, mover, solid);
         maxImpactSeen = Math.max(maxImpactSeen, impact);
-        if (impact > 3.2 && timeMs - lastImpactSoundMs > 105) {
+        if (impact > 3.2 && timeMs - lastImpactSoundMs > 125) {
           lastImpactSoundMs = timeMs;
           impactPulse = Math.max(impactPulse, clamp((impact - 3) / 12, 0.16, 1));
           SOUND.impact(contactMaterial(solid), clamp(impact / 18, 0.22, 1));
@@ -1785,6 +1785,11 @@
         bestMedals[level.id] = medals;
         persistMedals();
       }
+    }
+    if (won) {
+      SOUND.say("victory", 0.72);
+    } else if (["bonk", "hard-hit", "cargo", "wipeout"].indexOf(crashReason) !== -1) {
+      SOUND.say("oof", 0.64);
     }
     publishResult(won);
     TELEMETRY.track("run_finished", {

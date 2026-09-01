@@ -33,9 +33,9 @@ The browser gate runs the entire campaign and the one-move regression in mobile 
 
 ## Audio
 
-Sound unlocks on the first draw or GO interaction. The HUD keeps a single compact sound control, with separate settings for music, effects, and rider reactions. The current build uses a licensed 24-second OpenMusic loop plus recorded game-audio assets for pencil, wheel, impact, surface, UI, and human rider reactions. It does not synthesize sound effects or voices.
+Sound unlocks on the first draw or GO interaction. The HUD keeps a single compact sound control, with separate settings for music, effects, and rider reactions. The current build uses a licensed 24-second OpenMusic loop plus a playful recorded palette: short rider reactions, cartoon spring and toy Foley, pizzicato rewards, graphite texture, wheel clacks, wind, ice, and material-aware impacts. It does not synthesize sound effects or voices.
 
-The music lives at `assets/audio/ride-my-line-backyard-loop.mp3`; its OpenMusic commercial license was issued to Robert Wood on August 25, 2026. The audio director loops it, ducks it under rider reactions, and pauses it when the page is hidden. Asset provenance and attribution are recorded in `assets/audio/LICENSES.json` and `THIRD_PARTY_NOTICES.md`.
+The music lives at `assets/audio/ride-my-line-backyard-loop.mp3`; its OpenMusic commercial license was issued to Robert Wood on August 25, 2026. The audio director loops it, ducks it under rider reactions, pauses it when the page is hidden, and caps repeated pencil, wheel, wind, impact, rubber, and voice events so the mix stays clear during chaotic runs. Asset provenance and attribution are recorded in `assets/audio/LICENSES.json` and `THIRD_PARTY_NOTICES.md`.
 
 ## Production
 
