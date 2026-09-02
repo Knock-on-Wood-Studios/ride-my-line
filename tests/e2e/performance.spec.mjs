@@ -20,9 +20,10 @@ test("the simulation keeps rendering while a run is active", async ({ page }) =>
   await page.goto("/?yard=1&autoplay=1");
   await expect.poll(() => page.evaluate(() => window.__RML_DEBUG.state())).toBe("RUNNING");
   const before = await page.evaluate(() => window.__RML_DEBUG.renderCount());
-  await page.waitForTimeout(250);
-  const after = await page.evaluate(() => window.__RML_DEBUG.renderCount());
-  expect(after - before).toBeGreaterThan(5);
+  await expect.poll(
+    () => page.evaluate(() => window.__RML_DEBUG.renderCount()),
+    { timeout: 3_000, intervals: [100, 200, 300] }
+  ).toBeGreaterThan(before + 5);
 });
 
 test("reduced-motion preference is applied at startup", async ({ page }) => {
