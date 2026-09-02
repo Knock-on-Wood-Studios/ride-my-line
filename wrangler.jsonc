@@ -1,0 +1,22 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "ride-my-line",
+  "main": "./worker.js",
+  "compatibility_date": "2026-08-25",
+  "assets": {
+    "directory": "./dist",
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application",
+    "run_worker_first": ["/api/*"]
+  },
+  "analytics_engine_datasets": [
+    {
+      "binding": "RML_ANALYTICS",
+      "dataset": "ride_my_line_events"
+    }
+  ],
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1
+  }
+}

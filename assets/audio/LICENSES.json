@@ -1,0 +1,114 @@
+{
+  "schemaVersion": 1,
+  "assets": [
+    {
+      "files": ["ride-my-line-backyard-loop.mp3"],
+      "title": "Ride My Line Backyard Loop",
+      "source": "OpenMusic",
+      "license": "Commercial license",
+      "licenseRecord": "Issued to Robert Wood on 2026-08-25"
+    },
+    {
+      "files": [
+        "sfx/toggle.ogg",
+        "sfx/ice-scrape.ogg",
+        "sfx/wind.ogg"
+      ],
+      "title": "Interface Sounds",
+      "creator": "Kenney",
+      "sourceUrl": "https://kenney.nl/assets/interface-sounds",
+      "license": "CC0-1.0",
+      "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/"
+    },
+    {
+      "files": [
+        "sfx/wood-light.ogg",
+        "sfx/wood-medium.ogg",
+        "sfx/wood-heavy.ogg",
+        "sfx/soft-impact.ogg",
+        "sfx/wheel-clack.ogg"
+      ],
+      "title": "Impact Sounds",
+      "creator": "Kenney",
+      "sourceUrl": "https://kenney.nl/assets/impact-sounds",
+      "license": "CC0-1.0",
+      "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/"
+    },
+    {
+      "files": ["sfx/pencil.ogg"],
+      "title": "Pencil Sounds",
+      "creator": "AntumDeluge",
+      "sourceUrl": "https://opengameart.org/content/pencil-sounds",
+      "license": "CC0-1.0",
+      "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/"
+    },
+    {
+      "files": [
+        "sfx/ring-pizzicato.ogg",
+        "sfx/star-pizzicato.ogg",
+        "sfx/win-pizzicato.ogg",
+        "sfx/fail-pizzicato.ogg"
+      ],
+      "title": "Music Jingles",
+      "creator": "Kenney",
+      "sourceUrl": "https://kenney.nl/assets/music-jingles",
+      "license": "CC0-1.0",
+      "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "modifications": "Four pizzicato performances were selected and renamed for ring, star, win, and fail cues."
+    },
+    {
+      "files": ["sfx/launch-boing.ogg", "sfx/rubber-boing.ogg"],
+      "title": "Cartoony Jump and Bounce",
+      "creator": "YoFrankie! / Blender Foundation",
+      "sourceUrl": "https://opengameart.org/content/cartoony-jump-and-bounce",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "modifications": "Files were renamed, normalized, filtered, faded, and converted to stereo OGG for gameplay."
+    },
+    {
+      "files": ["sfx/rubber-squeak-1.ogg", "sfx/rubber-squeak-2.ogg"],
+      "title": "Squeak toy sounds",
+      "creator": "bart",
+      "sourceUrl": "https://opengameart.org/content/squeak-toy-sounds",
+      "license": "CC0-1.0",
+      "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "modifications": "Two recordings were selected, renamed, normalized, filtered, faded, and converted to stereo OGG."
+    },
+    {
+      "files": ["sfx/rider-woohoo-playful.ogg"],
+      "title": "MaleVoiceWoohoo.wav",
+      "creator": "melisandepope",
+      "sourceUrl": "https://freesound.org/people/melisandepope/sounds/557125/",
+      "license": "CC0-1.0",
+      "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "modifications": "The public HQ preview was renamed, normalized, filtered, faded, and converted to stereo OGG."
+    },
+    {
+      "files": ["sfx/rider-fall-funny.ogg"],
+      "title": "Screaming, startled, falling 3",
+      "creator": "AtoMediaDesign",
+      "sourceUrl": "https://freesound.org/people/AtoMediaDesign/sounds/648985/",
+      "license": "CC-BY-4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+      "modifications": "The public HQ preview was renamed, normalized, filtered, faded, and converted to stereo OGG."
+    },
+    {
+      "files": ["sfx/rider-oof-playful.ogg"],
+      "title": "Oof (original)",
+      "creator": "unfa",
+      "sourceUrl": "https://freesound.org/people/unfa/sounds/719053/",
+      "license": "CC0-1.0",
+      "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "modifications": "The public HQ preview was renamed, normalized, filtered, faded, and converted to stereo OGG."
+    },
+    {
+      "files": ["sfx/rider-yippee.ogg"],
+      "title": "yipee.wav",
+      "creator": "Higgs01",
+      "sourceUrl": "https://freesound.org/people/Higgs01/sounds/430925/",
+      "license": "CC0-1.0",
+      "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "modifications": "The public HQ preview was renamed, normalized, filtered, faded, and converted to stereo OGG."
+    }
+  ]
+}

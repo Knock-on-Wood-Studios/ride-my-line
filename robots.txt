@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://ride-my-line.robertwood50.workers.dev/sitemap.xml
