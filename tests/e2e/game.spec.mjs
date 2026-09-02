@@ -51,13 +51,17 @@ test.describe("prime-time progression flow", () => {
     await expect(page.locator("#btnNext")).toBeHidden();
   });
 
-  test("the opening boss and final crown receive distinct milestones", async ({ page }) => {
+  test("the opening boss introduces the mastery run", async ({ page }) => {
     await page.goto("/?yard=12&autoplay=1");
+    await expect(page.locator("#result")).toBeVisible({ timeout: 20_000 });
     await expect(page.locator("#resultTitle")).toHaveText("BOSS BEAT", { timeout: 20_000 });
     await expect(page.locator("#resultMessage")).toContainText("mastery yards");
     await expect(page.locator("#btnNext")).toHaveText("ENTER MASTERY RUN");
+  });
 
+  test("the final yard crowns the campaign", async ({ page }) => {
     await page.goto("/?yard=25&autoplay=1");
+    await expect(page.locator("#result")).toBeVisible({ timeout: 20_000 });
     await expect(page.locator("#resultTitle")).toHaveText("CROWNED", { timeout: 20_000 });
     await expect(page.locator("#resultMessage")).toContainText("All 25 yards conquered");
     await expect(page.locator("#result .result-card")).toHaveClass(/campaign-complete/);

@@ -38,7 +38,7 @@ The remaining launch gates require people or production authority outside this a
 ## Release evidence
 
 - `npm audit --audit-level=high`: zero vulnerabilities.
-- `npm test`: 25 unit, schema, security, PWA, licensing, and release-governance checks passed; 248 end-to-end scenarios passed.
+- `npm test`: 25 unit, schema, security, PWA, licensing, and release-governance checks passed; 252 end-to-end scenarios passed.
 - Production build: 51 files, 1,301 KiB; build verification passed.
 - Cloudflare dry run: 57 asset files read, Worker bundle 3.67 KiB / 1.41 KiB gzip, Analytics Engine and static asset bindings resolved, and no deployment was performed.
 - Interface anti-pattern detector: zero findings.
