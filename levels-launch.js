@@ -16,7 +16,7 @@
         drawZones: [{ x: 142, y: 318, w: 230, h: 360 }, { x: 340, y: 648, w: 230, h: 236 }],
         noDrawZones: [{ x: 330, y: 532, w: 112, h: 106 }]
       },
-      contract: { minAirMs: 90, maxAngle: 0.92 },
+      contract: { minAirMs: 60, maxAngle: 0.92 },
       checkpoints: [
         { id: "tailwind-dive", x: 292, y: 552, r: 32, direction: "down", minAxisSpeed: 2.5 },
         { id: "tailwind-gap", x: 374, y: 682, r: 32, direction: "right", minSpeed: 3.6 }
@@ -98,7 +98,7 @@
         drawZones: [{ x: 142, y: 338, w: 260, h: 306 }, { x: 438, y: 654, w: 164, h: 130 }],
         noDrawZones: [{ x: 408, y: 650, w: 30, h: 120 }]
       },
-      contract: { minAirMs: 90, minSpeed: 2.4 },
+      contract: { minAirMs: 50, minSpeed: 2.4 },
       checkpoints: [
         { id: "relay-bounce", x: 360, y: 584, r: 32, direction: "down", minAxisSpeed: 2.3 },
         { id: "relay-pass", x: 426, y: 654, r: 35, direction: "right", minSpeed: 4.0 }
@@ -228,7 +228,7 @@
         drawZones: [{ x: 126, y: 224, w: 284, h: 470 }, { x: 468, y: 686, w: 172, h: 194 }],
         noDrawZones: [{ x: 410, y: 580, w: 58, h: 218 }]
       },
-      contract: { minAirMs: 100, maxSpeed: 3.8, maxAngle: 0.5, settleMs: 460 },
+      contract: { minAirMs: 70, maxSpeed: 3.8, maxAngle: 0.5, settleMs: 460 },
       checkpoints: [
         { id: "brake-dive", x: 318, y: 548, r: 32, direction: "down", minAxisSpeed: 2.8 },
         { id: "brake-air", x: 450, y: 672, r: 34, direction: "down", minAxisSpeed: 2.2 },
@@ -459,7 +459,7 @@
         ],
         noDrawZones: [{ x: 284, y: 438, w: 8, h: 102 }, { x: 404, y: 610, w: 34, h: 158 }]
       },
-      contract: { minAirMs: 140, minSpeed: 2.2 },
+      contract: { minAirMs: 90, minSpeed: 2.2 },
       checkpoints: [
         { id: "ladder-one", x: 286, y: 468, r: 30, direction: "right", minSpeed: 3.0 },
         { id: "ladder-two", x: 422, y: 634, r: 32, direction: "right", minSpeed: 3.8 }
@@ -506,7 +506,7 @@
         drawZones: [{ x: 142, y: 270, w: 258, h: 440 }, { x: 468, y: 580, w: 126, h: 250 }],
         noDrawZones: [{ x: 398, y: 520, w: 68, h: 218 }]
       },
-      contract: { minAirMs: 90 },
+      contract: { minAirMs: 50 },
       checkpoints: [
         { id: "storm-dive", x: 326, y: 558, r: 30, direction: "down", minAxisSpeed: 2.5 },
         { id: "storm-gate", x: 436, y: 646, r: 32, direction: "right", minSpeed: 4.4 }
@@ -549,7 +549,7 @@
         ],
         noDrawZones: [{ x: 290, y: 438, w: 10, h: 126 }, { x: 412, y: 580, w: 56, h: 218 }]
       },
-      contract: { minAirMs: 150, maxSpeed: 3.9, maxAngle: 0.5, settleMs: 480 },
+      contract: { minAirMs: 120, maxSpeed: 3.9, maxAngle: 0.5, settleMs: 480 },
       checkpoints: [
         { id: "crown-dive", x: 318, y: 548, r: 34, direction: "down", minAxisSpeed: 2.6 },
         { id: "crown-flight", x: 450, y: 672, r: 36, direction: "down", minAxisSpeed: 2.0 },

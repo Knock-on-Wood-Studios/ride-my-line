@@ -1,6 +1,10 @@
 # Third-party notices
 
-Ride My Line includes third-party software and audio. This file is the human-readable companion to `assets/audio/LICENSES.json`.
+Ride My Line includes third-party software, typography, and audio. The machine-readable source and license manifest for every shipped audio clip lives at `assets/audio/LICENSES.json`.
+
+## Typography
+
+- “Patrick Hand” by Patrick Wagesreiter is bundled as an optimized Latin WOFF2 font under the [SIL Open Font License 1.1](assets/fonts/OFL-Patrick-Hand.txt). [Official Google Fonts source](https://github.com/google/fonts/tree/main/ofl/patrickhand).
 
 ## Audio
 

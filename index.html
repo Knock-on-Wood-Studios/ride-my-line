@@ -93,17 +93,28 @@
       <div class="result-card">
         <p id="resultKicker" class="result-kicker">yard-01</p>
         <h2 id="resultTitle">MADE IT</h2>
+        <p id="resultMessage" class="result-message">The flag is yours.</p>
         <div id="resultStars" class="result-stars"></div>
+        <p id="resultRecord" class="result-record" aria-live="polite"></p>
         <ul class="result-stats">
           <li><span>Time</span><strong id="statTime">0.00s</strong></li>
           <li><span>Ink used</span><strong id="statInk">0%</strong></li>
           <li><span>Score</span><strong id="statScore">0</strong></li>
         </ul>
-        <button type="button" id="btnAgain" class="btn btn-go btn-again">PLAY AGAIN</button>
-        <button type="button" id="btnNext" class="btn btn-next hidden">NEXT YARD</button>
+        <button type="button" id="btnNext" class="btn result-primary hidden">NEXT YARD</button>
+        <button type="button" id="btnAgain" class="btn result-primary">PLAY AGAIN</button>
         <button type="button" id="btnResetLine" class="btn btn-ghost">RESET LINE</button>
       </div>
     </div>
+
+    <aside id="orientationGuard" class="orientation-guard" aria-labelledby="orientationTitle" hidden>
+      <div class="orientation-note">
+        <p class="orientation-kicker">THE YARD TIPPED OVER</p>
+        <h2 id="orientationTitle">Turn your phone upright</h2>
+        <p>Portrait gives your finger room to draw the whole drop.</p>
+        <button type="button" id="btnLandscapeAnyway" class="btn btn-ghost">PLAY SIDEWAYS</button>
+      </div>
+    </aside>
 
     <div id="bootError" class="boot-error hidden" role="alert" aria-live="assertive">
       <div class="result-card">

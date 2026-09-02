@@ -49,6 +49,7 @@ test("a keyboard clear persists the next unlocked yard", async ({ page }) => {
 test("corrupt saved values recover to a playable first yard", async ({ page }) => {
   await page.addInitScript(() => {
     localStorage.setItem("kow.rideMyLine.medals", "not-json");
+    localStorage.setItem("kow.rideMyLine.bests", "not-json");
     localStorage.setItem("kow.rideMyLine.unlocked", "999999");
     localStorage.setItem("kow.rideMyLine.lastYard", "missing-yard");
   });
@@ -56,4 +57,26 @@ test("corrupt saved values recover to a playable first yard", async ({ page }) =
   await expect(page.locator("#yardChip")).toHaveText("yard 1/25");
   await expect(page.locator("#game")).toBeVisible();
   await expect(page.locator("body")).toHaveAttribute("data-storage", "available");
+});
+
+test("campaign reset clears personal records with medals and unlocks", async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.setItem("kow.rideMyLine.storageVersion", "3");
+    localStorage.setItem("kow.rideMyLine.unlocked", "6");
+    localStorage.setItem("kow.rideMyLine.medals", JSON.stringify({ "yard-01": 3 }));
+    localStorage.setItem("kow.rideMyLine.bests", JSON.stringify({
+      "yard-01": { score: 2010, timeMs: 1600, inkPercent: 62, medals: 3 }
+    }));
+  });
+  await page.goto("/?production=1");
+  await page.locator("#yardChip").click();
+  const reset = page.locator(".yard-reset");
+  await reset.click();
+  await reset.click();
+  const saved = await page.evaluate(() => ({
+    medals: localStorage.getItem("kow.rideMyLine.medals"),
+    bests: localStorage.getItem("kow.rideMyLine.bests"),
+    unlocked: localStorage.getItem("kow.rideMyLine.unlocked")
+  }));
+  expect(saved).toEqual({ medals: "{}", bests: "{}", unlocked: "1" });
 });

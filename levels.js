@@ -179,7 +179,7 @@
         drawZones: [{ x: 142, y: 318, w: 230, h: 360 }, { x: 340, y: 648, w: 230, h: 236 }],
         noDrawZones: [{ x: 330, y: 532, w: 112, h: 106 }]
       },
-      contract: { minAirMs: 90, maxAngle: 0.92 },
+      contract: { minAirMs: 60, maxAngle: 0.92 },
       checkpoints: [
         { id: "drop-ring", x: 292, y: 552, r: 32, direction: "down", minAxisSpeed: 2.5 },
         { id: "gap-ring", x: 374, y: 682, r: 32, direction: "right", minSpeed: 3.6 }
@@ -219,7 +219,7 @@
         drawZones: [{ x: 142, y: 338, w: 260, h: 306 }, { x: 438, y: 654, w: 164, h: 130 }],
         noDrawZones: [{ x: 408, y: 674, w: 30, h: 96 }]
       },
-      contract: { minAirMs: 50 },
+      contract: { minAirMs: 30 },
       checkpoints: [
         { id: "air-ring", x: 426, y: 654, r: 35, direction: "right", minSpeed: 4.0 }
       ],
@@ -306,7 +306,7 @@
         drawZones: [{ x: 142, y: 270, w: 258, h: 440 }, { x: 468, y: 580, w: 126, h: 250 }],
         noDrawZones: [{ x: 398, y: 520, w: 68, h: 218 }]
       },
-      contract: { minAirMs: 80 },
+      contract: { minAirMs: 60 },
       checkpoints: [
         { id: "wind-ring", x: 436, y: 646, r: 34, direction: "right", minSpeed: 4.2 }
       ],

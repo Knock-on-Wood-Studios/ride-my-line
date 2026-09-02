@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.3.0 — 2026-09-02
+
+- Rebuilt the result flow around an obvious primary action: advance after a clear, retry the same line after a wipeout, and redraw as the deliberate secondary choice.
+- Added per-yard personal records for score, clear time, ink use, and medals, with compact bests in the yard picker and safe migration from older or damaged local saves.
+- Added failure-specific recovery coaching, a Yard 12 mastery-run milestone, and a distinct Yard 25 campaign crown.
+- Added a compact-phone landscape prompt with an explicit escape, while keeping the complete game playable with the same draw-and-GO controls.
+- Self-hosted Patrick Hand under the SIL Open Font License and applied it consistently across the interface and canvas rendering.
+- Added release-governance workflows, production deployment approval hooks, progression and persistence coverage, responsive orientation coverage, and font/license validation.
+- Retuned frame-edge airtime contracts on nine jump-focused yards after repeated mobile WebKit sampling, preserving their visible gates and mechanics while removing unfair last-frame rejections.
+
 ## 1.2.0 — 2026-09-01
 
 - Recast the entire gameplay mix as playful backyard slapstick with four short recorded rider reactions, spring and toy Foley, and pizzicato ring, star, win, and fail cues.

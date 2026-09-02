@@ -5,6 +5,7 @@ import test from "node:test";
 const root = new URL("../../", import.meta.url);
 const manifest = JSON.parse(await readFile(new URL("manifest.webmanifest", root), "utf8"));
 const html = await readFile(new URL("index.html", root), "utf8");
+const styles = await readFile(new URL("styles.css", root), "utf8");
 const robots = await readFile(new URL("robots.txt", root), "utf8");
 const sitemap = await readFile(new URL("sitemap.xml", root), "utf8");
 const legalPages = await Promise.all(["privacy", "terms", "support"].map(async (page) => ({
@@ -16,11 +17,22 @@ test("the install manifest has a stable identity and complete icon set", async (
   assert.equal(manifest.id, "/");
   assert.equal(manifest.start_url, "/");
   assert.equal(manifest.display, "standalone");
+  assert.equal(manifest.orientation, "portrait-primary");
   assert.equal(manifest.name, "Ride My Line");
   assert.ok(manifest.icons.some((icon) => icon.sizes === "192x192"));
   assert.ok(manifest.icons.some((icon) => icon.sizes === "512x512"));
   assert.ok(manifest.icons.some((icon) => icon.purpose === "maskable"));
   await Promise.all(manifest.icons.map((icon) => access(new URL(icon.src.slice(1), root))));
+});
+
+test("the handwriting font is self-hosted with its redistribution license", async () => {
+  assert.match(styles, /@font-face/);
+  assert.match(styles, /assets\/fonts\/PatrickHand-Regular\.woff2/);
+  assert.doesNotMatch(html, /fonts\.googleapis\.com|fonts\.gstatic\.com/);
+  await access(new URL("assets/fonts/PatrickHand-Regular.woff2", root));
+  const license = await readFile(new URL("assets/fonts/OFL-Patrick-Hand.txt", root), "utf8");
+  assert.match(license, /SIL OPEN FONT LICENSE Version 1\.1/);
+  assert.match(license, /Patrick Wagesreiter/);
 });
 
 test("production discovery and share metadata use the canonical public URL", () => {

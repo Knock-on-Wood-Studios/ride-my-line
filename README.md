@@ -14,8 +14,9 @@ The player is a stick rider in a two-wheel cart, not a puddle of lava. Liquid (l
 2. Tap GO. The cart rolls off the ledge and drops in. A short shove, then physics owns it.
 3. A curve that meets the fall whooshes. A flat bridge under a tall drop pancakes. Reach the flag.
 4. The star is greedy: a worse line, extra points. Skip it if you want the flag only.
-5. Wipe out? PLAY AGAIN keeps your line. RESET LINE starts the scribble over. Either way, under a second.
-6. Clear a yard to unlock the next. Replay any unlocked yard from the tiny yard chip. NEXT YARD is on the result card.
+5. Wipe out? TRY SAME LINE keeps your line. REDRAW LINE starts the scribble over. Either way, under a second.
+6. Clear a yard to unlock the next. The result card makes the next yard the obvious move while keeping replay one tap away.
+7. Every yard remembers your best score, fastest clear, leanest line, and medals. Yard 12 opens the mastery run; Yard 25 crowns the campaign.
 
 ## Challenge slice
 
@@ -29,7 +30,7 @@ Use `npm run check` for level validation, unit tests, syntax checks, and a produ
 
 Every level is checked for ordered IDs, supported mechanics, valid geometry and ranges, complete reference segments, anchors, checkpoint directions, differentiating mechanics, difficulty progression, ink-budget feasibility, and craft-medal feasibility before a build can complete. `npm run report:levels` prints the campaign’s difficulty and mechanic matrix.
 
-The browser gate runs the entire campaign and the one-move regression in mobile and desktop Chromium, desktop Firefox, and mobile WebKit. GitHub Actions runs the same gates on every pull request and push to `main`.
+The browser gate runs the entire campaign, progression and persistence flows, responsive layouts, accessibility paths, audio behavior, performance budget, and the one-move regression in mobile and desktop Chromium, desktop Firefox, and mobile WebKit. GitHub Actions runs the same gates on every pull request and push to `main`; production deployment is a separate manually approved workflow for an audited `main` commit or release tag.
 
 ## Audio
 
@@ -41,7 +42,7 @@ The music lives at `assets/audio/ride-my-line-backyard-loop.mp3`; its OpenMusic 
 
 The build produces content-hashed executable assets, a strict same-origin security policy, a complete offline cache, install metadata and icons, user-facing privacy/terms/support pages, a health endpoint, and privacy-conscious aggregate difficulty telemetry backed by Cloudflare Analytics Engine. Product telemetry has no cookie, account, session ID, device ID, referrer, browsing history, or arbitrary text, and honors Global Privacy Control and Do Not Track.
 
-Release, rollback, monitoring, playtest, and level-expansion procedures live in `docs/`. See `PRIVACY.md`, `SECURITY.md`, `SUPPORT.md`, `LICENSE.md`, and `THIRD_PARTY_NOTICES.md` for the project policies.
+Release, rollback, monitoring, playtest, and level-expansion procedures live in `docs/`. The checked-in Patrick Hand webfont is self-hosted under the SIL Open Font License so the game's hand-drawn identity does not depend on a third-party request. See `PRIVACY.md`, `SECURITY.md`, `SUPPORT.md`, `LICENSE.md`, and `THIRD_PARTY_NOTICES.md` for the project policies.
 
 
 ## Core loop

@@ -45,3 +45,15 @@ test("the twenty-five-yard chooser scrolls within a short phone", async ({ page 
   await page.locator(".yard-reset").scrollIntoViewIfNeeded();
   await expect(page.locator(".yard-reset")).toBeVisible();
 });
+
+test("phone landscape recommends portrait but leaves an explicit escape hatch", async ({ page }) => {
+  await page.setViewportSize({ width: 844, height: 390 });
+  await page.goto("/?yard=1");
+  const guard = page.locator("#orientationGuard");
+  await expect(guard).toBeVisible();
+  await expect(page.locator("#orientationTitle")).toHaveText("Turn your phone upright");
+  await expect(page.locator("#btnLandscapeAnyway")).toHaveText("PLAY SIDEWAYS");
+  await page.locator("#btnLandscapeAnyway").click();
+  await expect(guard).toBeHidden();
+  await expect(page.locator("#game")).toBeFocused();
+});

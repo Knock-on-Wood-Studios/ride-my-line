@@ -62,7 +62,7 @@ test("the result dialog owns focus and makes the game background inert", async (
   await expect(page.locator("#game")).toHaveAttribute("aria-hidden", "true");
   await expect(page.locator("#hud")).toHaveAttribute("aria-hidden", "true");
   await result.press("Tab");
-  await expect(page.locator("#btnAgain")).toBeFocused();
+  await expect(page.locator("#btnNext")).toBeFocused();
 });
 
 test("keyboard drawing changes the line and starts a run without pointer input", async ({ page }) => {

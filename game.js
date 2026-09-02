@@ -21,6 +21,7 @@
   var STORAGE_UNLOCK = "kow.rideMyLine.unlocked";
   var STORAGE_LAST = "kow.rideMyLine.lastYard";
   var STORAGE_MEDALS = "kow.rideMyLine.medals";
+  var STORAGE_BESTS = "kow.rideMyLine.bests";
   var STORAGE_WIN_ANIM = "kow.rideMyLine.lastWinAnim";
   var STORAGE_FAIL_ANIM = "kow.rideMyLine.lastFailAnim";
   var STORAGE_MUTED = "kow.rideMyLine.muted";
@@ -28,7 +29,7 @@
   var STORAGE_MUSIC = "kow.rideMyLine.music";
   var STORAGE_EFFECTS = "kow.rideMyLine.effects";
   var STORAGE_VOICES = "kow.rideMyLine.voices";
-  var CURRENT_STORAGE_VERSION = 2;
+  var CURRENT_STORAGE_VERSION = 3;
 
   var localHost = typeof window !== "undefined" &&
     (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1" || window.location.hostname === "::1");
@@ -82,6 +83,8 @@
   var finishHoldMs = 0;
   var cargoBroken = false;
   var bestMedals = {};
+  var bestResults = {};
+  var lastRunRecord = null;
   var hintTimer = 0;
   var groundGraceMs = 0;
   var airborneMs = 0;
@@ -114,6 +117,8 @@
   var lastWinAnim = "";
   var lastFailAnim = "";
   var lastStamp = "";
+  var orientationQuery = null;
+  var orientationDismissed = false;
   var finishAnim = {
     active: false,
     win: false,
@@ -152,6 +157,11 @@
 
 
   function clamp(v, a, b) { return v < a ? a : v > b ? b : v; }
+
+  function formatScore(value) {
+    value = Math.max(0, Math.round(Number(value) || 0));
+    try { return value.toLocaleString("en-US"); } catch (error) { return String(value); }
+  }
 
   function hypot(ax, ay, bx, by) {
     var dx = bx - ax, dy = by - ay;
@@ -351,12 +361,14 @@
     resetProgressTimer = 0;
     resetProgressArmed = false;
     bestMedals = {};
+    bestResults = {};
     unlockedCount = 1;
     lastWinAnim = "";
     lastFailAnim = "";
     storageSet(STORAGE_UNLOCK, "1");
     storageSet(STORAGE_LAST, LEVELS[0] ? LEVELS[0].id : "");
     storageSet(STORAGE_MEDALS, "{}");
+    storageSet(STORAGE_BESTS, "{}");
     storageSet(STORAGE_WIN_ANIM, "");
     storageSet(STORAGE_FAIL_ANIM, "");
     TELEMETRY.track("progress_reset", { yard: LEVELS[0] ? LEVELS[0].id : "none", input: lastInputMethod });
@@ -374,7 +386,7 @@
     resetProgressArmed = true;
     button.textContent = "CONFIRM RESET";
     button.setAttribute("aria-label", "Confirm reset campaign progress");
-    announceStatus("Press Confirm Reset to erase medals and locked-yard progress. Sound settings will stay unchanged.");
+    announceStatus("Press Confirm Reset to erase records, medals, and locked-yard progress. Sound settings will stay unchanged.");
     if (resetProgressTimer) window.clearTimeout(resetProgressTimer);
     resetProgressTimer = window.setTimeout(function () {
       resetProgressArmed = false;
@@ -401,7 +413,32 @@
       storageSet(STORAGE_EFFECTS, storageGet(STORAGE_EFFECTS, "1"));
       storageSet(STORAGE_VOICES, storageGet(STORAGE_VOICES, "1"));
     }
+    if (version < 3) storageSet(STORAGE_BESTS, storageGet(STORAGE_BESTS, "{}"));
     storageSet(STORAGE_VERSION, String(CURRENT_STORAGE_VERSION));
+  }
+
+  function parseBestResults(raw) {
+    var parsed;
+    var clean = {};
+    try { parsed = JSON.parse(raw || "{}"); } catch (error) { return clean; }
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return clean;
+    for (var i = 0; i < LEVELS.length; i++) {
+      var id = LEVELS[i].id;
+      var item = parsed[id];
+      if (!item || typeof item !== "object") continue;
+      var score = Number(item.score);
+      var time = Number(item.timeMs);
+      var ink = Number(item.inkPercent);
+      var medals = Number(item.medals);
+      if (!Number.isFinite(score) || score < 0 || score > 100000) continue;
+      clean[id] = {
+        score: Math.round(score),
+        timeMs: Number.isFinite(time) ? Math.round(clamp(time, 0, 60000)) : 60000,
+        inkPercent: Number.isFinite(ink) ? Math.round(clamp(ink, 0, 100)) : 100,
+        medals: Number.isFinite(medals) ? Math.round(clamp(medals, 0, 3)) : 0
+      };
+    }
+    return clean;
   }
 
   function loadAudioSettings() {
@@ -420,6 +457,7 @@
     } catch (err) {
       bestMedals = {};
     }
+    bestResults = parseBestResults(storageGet(STORAGE_BESTS, "{}"));
     unlockedCount = clamp(parseInt(storageGet(STORAGE_UNLOCK, "1"), 10) || 1, 1, LEVELS.length || 1);
     var lastId = storageGet(STORAGE_LAST, "");
     var idx = 0;
@@ -442,6 +480,10 @@
 
   function persistMedals() {
     storageSet(STORAGE_MEDALS, JSON.stringify(bestMedals));
+  }
+
+  function persistBestResults() {
+    storageSet(STORAGE_BESTS, JSON.stringify(bestResults));
   }
 
   function updateSoundHud() {
@@ -590,10 +632,19 @@
       btn.type = "button";
       var open = i < unlockedCount;
       btn.disabled = !open;
-      var medalTag = bestMedals[LEVELS[i].id] ? "  ·  " + bestMedals[LEVELS[i].id] + "/3" : "";
+      var savedMedals = bestMedals[LEVELS[i].id] || 0;
+      var savedResult = bestResults[LEVELS[i].id];
+      var medalTag = savedMedals ? "  ·  " + savedMedals + "/3" : "";
+      var scoreTag = savedResult ? "  ·  " + formatScore(savedResult.score) : "";
       btn.textContent = open
-        ? (i + 1) + "  " + LEVELS[i].name + medalTag
+        ? (i + 1) + "  " + LEVELS[i].name + medalTag + scoreTag
         : (i + 1) + "  —";
+      if (open) {
+        var recordLabel = savedResult ? ", best score " + formatScore(savedResult.score) : ", not yet cleared";
+        btn.setAttribute("aria-label", "Yard " + (i + 1) + ", " + LEVELS[i].name + ", " + savedMedals + " of 3 medals" + recordLabel);
+      } else {
+        btn.setAttribute("aria-label", "Yard " + (i + 1) + ", locked");
+      }
       if (i === levelIndex) {
         btn.className = "current";
         btn.setAttribute("aria-current", "step");
@@ -1660,6 +1711,28 @@
     return s;
   }
 
+  function recordWin(medals) {
+    if (!level) return null;
+    var score = scoreFor(true);
+    var runTime = Math.round(timeMs);
+    var runInk = Math.round(clamp(totalInk() / inkMax(), 0, 1) * 100);
+    var previous = bestResults[level.id] || null;
+    var next = {
+      score: previous ? Math.max(previous.score, score) : score,
+      timeMs: previous ? Math.min(previous.timeMs, runTime) : runTime,
+      inkPercent: previous ? Math.min(previous.inkPercent, runInk) : runInk,
+      medals: previous ? Math.max(previous.medals, medals) : medals
+    };
+    bestResults[level.id] = next;
+    persistBestResults();
+    return {
+      isNew: !previous || score > previous.score,
+      score: score,
+      bestScore: next.score,
+      previousScore: previous ? previous.score : 0
+    };
+  }
+
   function medalsFor(won) {
     if (!won) return 0;
     var medals = 1;
@@ -1779,12 +1852,14 @@
       unlockedCount = LEVELS.length;
       persistUnlock();
     }
+    lastRunRecord = null;
     if (won && level) {
-      var medals = medalsFor(true);
-      if (!bestMedals[level.id] || medals > bestMedals[level.id]) {
-        bestMedals[level.id] = medals;
+      var wonMedals = medalsFor(true);
+      if (!bestMedals[level.id] || wonMedals > bestMedals[level.id]) {
+        bestMedals[level.id] = wonMedals;
         persistMedals();
       }
+      lastRunRecord = recordWin(wonMedals);
     }
     if (won) {
       SOUND.say("victory", 0.72);
@@ -1821,6 +1896,30 @@
     resultTimer = 0;
   }
 
+  function failureAdvice(reason) {
+    var advice = {
+      turtle: "Wheels up. Give the landing a gentler exit.",
+      bonk: "The chassis hit first. Flatten the catch before the landing.",
+      stuck: "Keep the line falling forward so the cart can carry speed.",
+      "too-fast": "Scrub speed with a longer, softer uphill finish.",
+      "too-slow": "Save more momentum through the final curve.",
+      crooked: "Level the last section before the parking zone.",
+      checkpoint: "Follow every numbered ring in order and in its arrow direction.",
+      cargo: "Round out the hard landings to protect the cargo.",
+      "hard-hit": "Soften the catch. The landing impact was too hard.",
+      "no-flip": "Build one clean curl that turns the cart all the way over.",
+      "no-air": "Use a sharper launch lip to earn more airtime.",
+      dirt: "Catch the wheels before the rider meets the dirt."
+    };
+    return advice[reason] || "Redraw the catch and give the wheels a cleaner way through.";
+  }
+
+  function setResultButton(button, primary, label) {
+    if (!button) return;
+    button.className = "btn " + (primary ? "result-primary" : "result-secondary");
+    button.textContent = label;
+  }
+
   function showResult(won) {
     if (!el.result || resultShown) return;
     resultShown = true;
@@ -1839,8 +1938,15 @@
       "no-air": "NO JUMP",
       dirt: "ATE DIRT"
     };
-    el.resultTitle.textContent = won ? "MADE IT" : (failTitles[crashReason] || "WIPEOUT");
+    var openingComplete = !!(won && levelIndex === 11);
+    var campaignComplete = !!(won && levelIndex + 1 === LEVELS.length);
+    el.resultTitle.textContent = campaignComplete
+      ? "CROWNED"
+      : openingComplete
+        ? "BOSS BEAT"
+        : won ? "MADE IT" : (failTitles[crashReason] || "WIPEOUT");
     el.resultTitle.className = won ? "" : "fail";
+    if (el.resultCard) el.resultCard.classList.toggle("campaign-complete", campaignComplete);
     var yardTag = level ? level.id : "yard-01";
     var yardName = level ? level.name : "";
     el.resultKicker.textContent = won
@@ -1849,14 +1955,47 @@
     var medals = medalsFor(won);
     el.resultStars.textContent = won ? medalMarks(medals) : " ";
     el.resultStars.setAttribute("aria-label", won ? medals + " of 3 medals" : "No medals");
+    if (el.resultMessage) {
+      el.resultMessage.textContent = campaignComplete
+        ? "All 25 yards conquered. The backyard is yours."
+        : openingComplete
+          ? "Opening run cleared. Thirteen mastery yards are unlocked."
+          : won ? "The flag is yours. Keep rolling or chase a cleaner line." : failureAdvice(crashReason);
+    }
+    if (el.resultRecord) {
+      var saved = level ? bestResults[level.id] : null;
+      if (won && lastRunRecord) {
+        el.resultRecord.textContent = (lastRunRecord.isNew ? "NEW BEST · " : "BEST · ") + formatScore(lastRunRecord.bestScore);
+      } else if (saved) {
+        el.resultRecord.textContent = "BEST · " + formatScore(saved.score);
+      } else {
+        el.resultRecord.textContent = "NO CLEAR YET";
+      }
+    }
     el.statTime.textContent = (timeMs / 1000).toFixed(2) + "s";
     el.statInk.textContent = Math.round(clamp(totalInk() / inkMax(), 0, 1) * 100) + "%";
-    el.statScore.textContent = String(scoreFor(won));
-    if (el.hint) el.hint.textContent = won ? "again?" : "redraw it";
+    el.statScore.textContent = formatScore(scoreFor(won));
+    if (el.hint) el.hint.textContent = campaignComplete ? "backyard royalty" : won ? "keep rolling" : "tune the line";
+    var hasNext = !!(won && levelIndex + 1 < LEVELS.length && levelIndex + 1 < unlockedCount);
     if (el.btnNext) {
-      var hasNext = !!(won && levelIndex + 1 < LEVELS.length && levelIndex + 1 < unlockedCount);
-      if (hasNext) el.btnNext.classList.remove("hidden");
-      else el.btnNext.classList.add("hidden");
+      setResultButton(el.btnNext, true, openingComplete ? "ENTER MASTERY RUN" : "NEXT YARD");
+      el.btnNext.classList.toggle("hidden", !hasNext);
+    }
+    if (won && hasNext) {
+      setResultButton(el.btnAgain, false, "REPLAY YARD");
+      if (el.btnResetLine) el.btnResetLine.classList.add("hidden");
+    } else if (won) {
+      setResultButton(el.btnAgain, true, campaignComplete ? "RIDE AGAIN" : "REPLAY YARD");
+      if (el.btnResetLine) {
+        setResultButton(el.btnResetLine, false, "DRAW A NEW LINE");
+        el.btnResetLine.classList.remove("hidden");
+      }
+    } else {
+      setResultButton(el.btnAgain, true, "TRY SAME LINE");
+      if (el.btnResetLine) {
+        setResultButton(el.btnResetLine, false, "REDRAW LINE");
+        el.btnResetLine.classList.remove("hidden");
+      }
     }
     resultReturnFocus = document.activeElement && document.activeElement !== document.body
       ? document.activeElement
@@ -1871,6 +2010,7 @@
     resultShown = false;
     resultTimer = 0;
     if (el.btnNext) el.btnNext.classList.add("hidden");
+    if (el.btnResetLine) el.btnResetLine.classList.remove("hidden");
     if (wasOpen) {
       setGameInert(false);
       var focusTarget = resultReturnFocus;
@@ -2293,7 +2433,7 @@
     if (!box || box.w <= 0 || box.h <= 0) return;
     c.save();
     c.setLineDash([]);
-    c.font = "800 17px Segoe Print, Comic Sans MS, cursive";
+    c.font = "800 17px Yard Hand, Segoe Print, Comic Sans MS, cursive";
     var textWidth = c.measureText(text).width;
     var small = box.w < textWidth + 22 || box.h < 42;
     var x = small ? box.x + box.w + 9 : box.x + 12;
@@ -2375,7 +2515,7 @@
       c.stroke();
       c.setLineDash([]);
       c.fillStyle = hit ? "#6a8a4a" : "#2a2218";
-      c.font = "700 16px Segoe Print, Comic Sans MS, cursive";
+      c.font = "700 16px Yard Hand, Segoe Print, Comic Sans MS, cursive";
       c.textAlign = "center";
       var arrows = { down: "↓", up: "↑", right: "→", left: "←" };
       var glyph = hit ? "✓" : String(i + 1) + (arrows[cp.direction] || (cp.airborne ? "↗" : ""));
@@ -2652,7 +2792,7 @@
       c.lineWidth = 2;
       c.fillRect(-12, -9, 24, 18);
       c.strokeRect(-12, -9, 24, 18);
-      c.font = "700 6px Segoe Print, Comic Sans MS, cursive";
+      c.font = "700 6px Yard Hand, Segoe Print, Comic Sans MS, cursive";
       c.textAlign = "center";
       c.fillStyle = "#2a2218";
       c.fillText(level.cargo.label || "BOX", 0, 2);
@@ -2862,7 +3002,7 @@
     c.translate(pose.x + 48, pose.y - 54);
     c.rotate(-0.12);
     c.fillStyle = "#d4542a";
-    c.font = "700 19px Segoe Print, Comic Sans MS, cursive";
+    c.font = "700 19px Yard Hand, Segoe Print, Comic Sans MS, cursive";
     c.textAlign = "left";
     c.fillText(word, 0, 0);
     c.restore();
@@ -2894,7 +3034,7 @@
     c.strokeStyle = "#d4542a";
     c.fillStyle = "rgba(212,84,42,0.14)";
     c.lineWidth = 5;
-    c.font = "700 54px Segoe Print, Comic Sans MS, cursive";
+    c.font = "700 54px Yard Hand, Segoe Print, Comic Sans MS, cursive";
     c.textAlign = "center";
     c.textBaseline = "middle";
     var w = c.measureText(finishAnim.stamp).width + 36;
@@ -2925,7 +3065,7 @@
     c.fillStyle = "#d4542a";
     c.strokeStyle = "#2a2218";
     c.lineWidth = 2;
-    c.font = "700 28px Segoe Print, Comic Sans MS, cursive";
+    c.font = "700 28px Yard Hand, Segoe Print, Comic Sans MS, cursive";
     c.textAlign = "center";
     c.translate(DESIGN_W * 0.5 + Math.sin(k * 8) * 3, 300);
     c.rotate(-0.12);
@@ -3132,6 +3272,29 @@
     return ended && resultShown;
   }
 
+  function updateOrientationGuard() {
+    if (!el.orientationGuard || !orientationQuery) return;
+    var shouldShow = orientationQuery.matches && !orientationDismissed;
+    el.orientationGuard.hidden = !shouldShow;
+    if (document.body) document.body.dataset.orientationGuard = shouldShow ? "shown" : "hidden";
+    if (shouldShow) announceStatus("Portrait orientation is recommended. Turn the phone upright or choose Play Sideways.");
+  }
+
+  function bindOrientationGuard() {
+    if (!window.matchMedia || !el.orientationGuard) return;
+    orientationQuery = window.matchMedia("(orientation: landscape) and (max-height: 560px) and (min-aspect-ratio: 4/3)");
+    if (orientationQuery.addEventListener) orientationQuery.addEventListener("change", updateOrientationGuard);
+    else if (orientationQuery.addListener) orientationQuery.addListener(updateOrientationGuard);
+    if (el.btnLandscapeAnyway) {
+      el.btnLandscapeAnyway.addEventListener("click", function () {
+        orientationDismissed = true;
+        updateOrientationGuard();
+        canvas.focus();
+      });
+    }
+    updateOrientationGuard();
+  }
+
   function bindHud() {
     el.btnGo.addEventListener("click", function (e) {
       e.preventDefault();
@@ -3189,6 +3352,7 @@
       el.btnReload.addEventListener("click", function () { window.location.reload(); });
     }
     if (el.result) el.result.addEventListener("keydown", trapResultFocus);
+    bindOrientationGuard();
     if (el.yardList) {
       el.yardList.addEventListener("keydown", function (e) {
         var items = Array.prototype.slice.call(el.yardList.querySelectorAll("button:not(:disabled)"));
@@ -3272,9 +3436,12 @@
     el.audioDone = document.getElementById("audioDone");
     el.yardList = document.getElementById("yardList");
     el.result = document.getElementById("result");
+    el.resultCard = el.result ? el.result.querySelector(".result-card") : null;
     el.resultTitle = document.getElementById("resultTitle");
     el.resultKicker = document.getElementById("resultKicker");
+    el.resultMessage = document.getElementById("resultMessage");
     el.resultStars = document.getElementById("resultStars");
+    el.resultRecord = document.getElementById("resultRecord");
     el.statTime = document.getElementById("statTime");
     el.statInk = document.getElementById("statInk");
     el.statScore = document.getElementById("statScore");
@@ -3282,6 +3449,8 @@
     el.btnReload = document.getElementById("btnReload");
     el.gameStatus = document.getElementById("gameStatus");
     el.hud = document.getElementById("hud");
+    el.orientationGuard = document.getElementById("orientationGuard");
+    el.btnLandscapeAnyway = document.getElementById("btnLandscapeAnyway");
   }
 
   function seedPaper() {
@@ -3325,6 +3494,12 @@
     SOUND.setMuted(storageGet(STORAGE_MUTED, "0") === "1");
     updateSoundHud();
     seedPaper();
+    if (document.fonts && document.fonts.ready) {
+      document.fonts.ready.then(function () {
+        staticLayerLevel = "";
+        requestFrame();
+      });
+    }
     resize();
     window.addEventListener("resize", resize);
     var startIdx = loadProgress();
