@@ -105,7 +105,9 @@ test("Arcade exits stay keyboard reachable in the yard picker and result dialog"
   await expect(exit).toBeFocused();
   await exit.press("Tab");
   await expect(page.locator("#btnNext")).toBeFocused();
-  await page.locator("#btnResetLine").click();
+  await page.locator("#btnNext").click();
+  await expect(result).toBeHidden();
+  await expect(page.locator("#yardChip")).toHaveText("yard 2/25");
   await page.locator("#yardChip").click();
   await expect(page.locator("#yardList").getByRole("link", { name: "Back to Arcade" })).toBeVisible();
 });
