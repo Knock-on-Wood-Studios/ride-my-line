@@ -94,3 +94,20 @@ test("Yard 1 can be completed with the keyboard-only drawing path", async ({ pag
   await expect(page.locator("#result")).toBeVisible({ timeout: 20_000 });
   await expect(page.locator("#resultTitle")).toHaveText("MADE IT");
 });
+
+test("Arcade exits stay keyboard reachable in the yard picker and result dialog", async ({ page }) => {
+  await page.goto("/?yard=1&autoplay=1");
+  const result = page.locator("#result");
+  await expect(result).toBeVisible({ timeout: 20_000 });
+  const exit = result.getByRole("link", { name: "Back to Arcade" });
+  await expect(exit).toHaveAttribute("href", "https://knockonwood.studio/arcade");
+  await result.press("Shift+Tab");
+  await expect(exit).toBeFocused();
+  await exit.press("Tab");
+  await expect(page.locator("#btnNext")).toBeFocused();
+  await page.locator("#btnNext").click();
+  await expect(result).toBeHidden();
+  await expect(page.locator("#yardChip")).toHaveText("yard 2/25");
+  await page.locator("#yardChip").click();
+  await expect(page.locator("#yardList").getByRole("link", { name: "Back to Arcade" })).toBeVisible();
+});
