@@ -672,6 +672,11 @@
       armProgressReset(reset);
     });
     el.yardList.appendChild(reset);
+    var arcade = document.createElement("a");
+    arcade.className = "arcade-link";
+    arcade.href = "https://knockonwood.studio/arcade";
+    arcade.textContent = "Back to Arcade";
+    el.yardList.appendChild(arcade);
   }
 
   function hideYardList() {
@@ -2032,7 +2037,7 @@
 
   function trapResultFocus(e) {
     if (e.key !== "Tab" || !resultShown || !el.result) return;
-    var controls = Array.prototype.slice.call(el.result.querySelectorAll("button:not(.hidden):not(:disabled)"));
+    var controls = Array.prototype.slice.call(el.result.querySelectorAll("button:not(.hidden):not(:disabled), a[href]:not(.hidden)"));
     if (!controls.length) {
       e.preventDefault();
       el.result.focus();
